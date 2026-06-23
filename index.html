@@ -1787,7 +1787,7 @@
     function setChart(id, option) { const c = chart(id); if (c) c.setOption(option, true); }
     const baseGrid = { top:50, right:26, bottom:44, left:54, containLabel:true };
     const tooltip = { trigger:'axis', backgroundColor:'rgba(17,17,19,.94)', borderColor:'rgba(255,255,255,.12)', textStyle:{color:'#fff'}, axisPointer:{ type:'cross', lineStyle:{color:'#C64235'} } };
-    const toolbox = { show:true, right:16, top:10, feature:{ dataZoom:{ yAxisIndex:'none' }, restore:{}, saveAsImage:{ pixelRatio:2 } }, iconStyle:{ borderColor:'#9a958e' } };
+    const toolbox = { show:true, right:16, top:10, feature:{ dataZoom:{ yAxisIndex:'none' }, restore:{} }, iconStyle:{ borderColor:'#9a958e' } };
 
     function renderHeroTrend() {
       const m = monthlySeries();
@@ -2022,15 +2022,19 @@
     function renderExpenses() {
       const rows = DATA.expenses.annual || [];
       setChart('expensesPlan', {
-        color:['#C64235','#2F6B5B','#fff'], animationDuration:900, tooltip, legend:{top:10,left:22,textStyle:{color:'rgba(255,255,255,.72)'}}, toolbox, grid:baseGrid,
+        color:['#C64235','#2F6B5B','#fff'], animationDuration:900, tooltip,
+        legend:{type:'scroll', top:10, left:22, right:56, textStyle:{color:'rgba(255,255,255,.68)', fontSize:12}, pageIconColor:'rgba(255,255,255,.72)', pageTextStyle:{color:'rgba(255,255,255,.55)'}},
+        toolbox,
+        grid:{top:52, right:26, bottom:44, left:54, containLabel:true},
         xAxis:{type:'category', data:DATA.fact.years, axisTick:{show:false}, axisLine:{show:false}, axisLabel:{color:'rgba(255,255,255,.7)'}}, yAxis:{type:'value', axisLabel:{formatter:v=>v+' млн', color:'rgba(255,255,255,.7)'}, splitLine:{lineStyle:{color:'rgba(255,255,255,.10)'}}},
         series: rows.map((r,i)=>({name:r.metric, type:i===0?'bar':'line', smooth:true, data:DATA.fact.years.map(y=>mln(r[String(y)]||0)), barWidth:'36%', itemStyle:{borderRadius:[10,10,0,0], color:i===0?gradient('#C64235','#D88A55'):undefined}, lineStyle:{width:3} }))
       });
       const cats = DATA.expenses.categories || [];
       setChart('expenseMix', {
         color:['#121417','#C64235','#C66A3A','#2F6B5B','#697386','#4E6F8A'], animationDuration:900,
-        tooltip:{trigger:'item', backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter:p=>`${p.name}<br><b>${money(p.value)}</b> (${p.percent}%)`}, legend:{bottom:8,left:'center',textStyle:{color:'#6e6a64'}},
-        series:[{type:'pie', radius:['40%','78%'], center:['50%','44%'], roseType:'area', itemStyle:{borderColor:'#fff', borderWidth:3}, label:{fontWeight:800}, data:cats.map(c=>({name:c.article || c.category || 'Без категории', value:c.monthly || c.annual || 0})) }]
+        tooltip:{trigger:'item', backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter:p=>`${p.name}<br><b>${money(p.value)}</b> (${p.percent}%)`},
+        legend:{type:'scroll', bottom:6, left:'center', itemWidth:12, itemHeight:12, textStyle:{color:'#6e6a64', fontSize:12}},
+        series:[{type:'pie', radius:['42%','74%'], center:['50%','46%'], roseType:'area', avoidLabelOverlap:true, itemStyle:{borderColor:'#fff', borderWidth:3}, label:{show:true, formatter:p=>p.percent>9?p.name.split(' ').slice(0,2).join(' '):'', fontWeight:700, fontSize:11}, labelLine:{show:true, length:8, length2:6}, data:cats.map(c=>({name:c.article || c.category || 'Без категории', value:c.monthly || c.annual || 0})) }]
       });
       renderRawArray('expensesTable', DATA.rawSheets['Расходы'] || []);
     }
