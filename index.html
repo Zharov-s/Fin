@@ -1914,7 +1914,7 @@
         series:[{
           type:'treemap', roam:false, nodeClick:false,
           breadcrumb:{show:false},
-          label:{ show:true, formatter: p => `${p.name}\n${money(p.data.baseValue)}`, color:'#fff', fontWeight:800, fontSize:13, lineHeight:20 },
+          label:{ show:true, formatter: p => p.data.isLeased ? `${p.name}\n${money(p.data.baseValue)}` : `${p.name}\nпотенциал: ${money(p.data.baseValue)}`, color:'#fff', fontWeight:800, fontSize:13, lineHeight:20 },
           upperLabel:{show:false},
           itemStyle:{gapWidth:8, borderRadius:10},
           levels:[{ itemStyle:{borderColor:'rgba(255,255,255,.2)', gapWidth:8} }],
