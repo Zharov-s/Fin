@@ -1875,24 +1875,47 @@
       });
     }
     function renderLotTreemap() {
-      const lots = filteredLots().map(l => {
+      const allLots = filteredLots();
+      const tenantTotals = {};
+      allLots.forEach(l => {
+        const key = l.isLeased ? (l.tenant || '—') : 'Вакантный лот';
         const base = l.isLeased ? monthlyRentForLot(l, DATA.fact.start) : marketMonthlyRentForLot(l, DATA.fact.start);
         const all  = l.isLeased ? (base + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
-        return { name:l.lot, value:Math.max(mln(all), 0.01), baseValue:base, rawValue:all, tenant:l.isLeased ? l.tenant : 'Вакантный лот', mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.14)', borderWidth:2 } };
+        if (!tenantTotals[key]) tenantTotals[key] = { base:0, all:0, count:0 };
+        tenantTotals[key].base += base;
+        tenantTotals[key].all  += all;
+        tenantTotals[key].count++;
       });
+      const lots = allLots.map(l => {
+        const key  = l.isLeased ? (l.tenant || '—') : 'Вакантный лот';
+        const base = l.isLeased ? monthlyRentForLot(l, DATA.fact.start) : marketMonthlyRentForLot(l, DATA.fact.start);
+        const all  = l.isLeased ? (base + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
+        const tt   = tenantTotals[key];
+        return { name:l.lot, value:Math.max(mln(all), 0.01), baseValue:base, rawValue:all, tenant:l.isLeased ? l.tenant : 'Вакантный лот', tenantBase:tt.base, tenantAll:tt.all, tenantLots:tt.count, mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.14)', borderWidth:2 } };
+      });
+      const SEP = `<br><span style="color:rgba(255,255,255,.35);font-size:10px">──────────────────────</span>`;
       setChart('lotTreemap', {
         color:PALETTE, animationDuration:1100,
         tooltip:{
           formatter: p => {
             const d = p.data;
+            const multi = d.tenantLots > 1;
             if (d.mode === 'Факт') {
-              return `<b>${escapeHtml(p.name)}</b><br>${escapeHtml(d.tenant)}`
-                + `<br>База / мес: <b>${money(d.baseValue)}</b>`
-                + `<br>Всё включено / мес: ${money(d.rawValue)}`;
+              let t = `<b>${escapeHtml(p.name)}</b><br><span style="color:rgba(255,255,255,.6)">${escapeHtml(d.tenant)}</span>`
+                + `<br>Лот · база / мес: <b>${money(d.baseValue)}</b>`
+                + `<br>Лот · всё включено / мес: ${money(d.rawValue)}`;
+              if (multi) t += SEP
+                + `<br>Итого арендатор · база / мес: <b>${money(d.tenantBase)}</b>`
+                + `<br>Итого арендатор · всё вкл. / мес: ${money(d.tenantAll)}`;
+              return t;
             }
-            return `<b>${escapeHtml(p.name)}</b><br>${escapeHtml(d.tenant)}`
-              + `<br>Потенциал базовый / мес: <b>${money(d.baseValue)}</b>`
-              + `<br>Потенциал всё вкл. / мес: ${money(d.rawValue)}`;
+            let t = `<b>${escapeHtml(p.name)}</b><br><span style="color:rgba(255,255,255,.6)">${escapeHtml(d.tenant)}</span>`
+              + `<br>Потенциал · база / мес: <b>${money(d.baseValue)}</b>`
+              + `<br>Потенциал · всё вкл. / мес: ${money(d.rawValue)}`;
+            if (multi) t += SEP
+              + `<br>Потенциал итого · база / мес: <b>${money(d.tenantBase)}</b>`
+              + `<br>Потенциал итого · всё вкл. / мес: ${money(d.tenantAll)}`;
+            return t;
           },
           backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}
         },
