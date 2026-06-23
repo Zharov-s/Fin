@@ -1875,54 +1875,49 @@
       });
     }
     function renderLotTreemap() {
-      const allLots = filteredLots();
       const tenantMap = {};
-      allLots.forEach(l => {
+      filteredLots().forEach(l => {
         const key  = l.isLeased ? (l.tenant || '—') : 'Вакантные лоты';
         const base = l.isLeased ? monthlyRentForLot(l, DATA.fact.start) : marketMonthlyRentForLot(l, DATA.fact.start);
         const all  = l.isLeased ? (base + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
-        if (!tenantMap[key]) tenantMap[key] = { children:[], base:0, all:0, isLeased:l.isLeased };
-        tenantMap[key].children.push({ name:l.lot, value:Math.max(mln(all), 0.01), baseValue:base, rawValue:all, tenant:key, mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.12)', borderWidth:2 } });
+        if (!tenantMap[key]) tenantMap[key] = { base:0, all:0, area:0, lots:[], isLeased:l.isLeased };
         tenantMap[key].base += base;
         tenantMap[key].all  += all;
+        tenantMap[key].area += l.area;
+        tenantMap[key].lots.push(l.lot);
       });
       const data = Object.entries(tenantMap).map(([name, t]) => ({
-        name, baseValue:t.base, rawValue:t.all, isLeased:t.isLeased,
-        children:t.children,
-        itemStyle:{ borderColor:'rgba(255,255,255,.32)', borderWidth:4 }
+        name,
+        value: Math.max(mln(t.base), 0.01),
+        baseValue: t.base,
+        allValue:  t.all,
+        area:      t.area,
+        lots:      t.lots,
+        isLeased:  t.isLeased,
+        itemStyle: { borderColor:'rgba(255,255,255,.2)', borderWidth:3 }
       }));
       setChart('lotTreemap', {
         color:PALETTE, animationDuration:1100,
         tooltip:{
           formatter: p => {
             const d = p.data;
-            if (d.children) {
-              const label = d.isLeased ? 'Факт' : 'Потенциал';
-              return `<b>${escapeHtml(d.name)}</b>`
-                + `<br>${label} · база / мес: <b>${money(d.baseValue)}</b>`
-                + `<br>${label} · всё включено / мес: ${money(d.rawValue)}`;
-            }
-            return `<b>${escapeHtml(p.name)}</b><br><span style="color:rgba(255,255,255,.6)">${escapeHtml(d.tenant)}</span>`
-              + `<br>Лот · база / мес: <b>${money(d.baseValue)}</b>`
-              + `<br>Лот · всё включено / мес: ${money(d.rawValue)}`;
+            const mode = d.isLeased ? 'Факт' : 'Потенциал';
+            const lotList = d.lots.map(l=>`· ${escapeHtml(l)}`).join('<br>');
+            return `<b>${escapeHtml(d.name)}</b>`
+              + `<br><span style="color:rgba(255,255,255,.55);font-size:11px">${lotList}</span>`
+              + `<br><br>${mode} · база / мес: <b>${money(d.baseValue)}</b>`
+              + `<br>${mode} · всё включено / мес: ${money(d.allValue)}`
+              + `<br>Площадь: ${num(d.area, 0)} м²`;
           },
           backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}
         },
         series:[{
-          type:'treemap', roam:true, nodeClick:'zoomToNode',
-          breadcrumb:{ show:true, bottom:4, itemStyle:{ color:'rgba(255,255,255,.12)', textStyle:{color:'rgba(255,255,255,.85)'} } },
-          label:{ show:true, formatter:'{b}', color:'#fff', fontWeight:800 },
-          upperLabel:{
-            show:true, height:30,
-            formatter: p => `${p.name}   ·   База / мес: ${money(p.data.baseValue)}`,
-            color:'#fff', fontWeight:700, fontSize:12,
-            backgroundColor:'rgba(0,0,0,.35)', padding:[6,10]
-          },
-          itemStyle:{ gapWidth:5, borderRadius:4 },
-          levels:[
-            { itemStyle:{ borderColor:'rgba(255,255,255,.28)', borderWidth:4, gapWidth:8, borderRadius:6 }, upperLabel:{show:true} },
-            { itemStyle:{ borderColor:'rgba(255,255,255,.12)', borderWidth:2, gapWidth:4, borderRadius:4 } }
-          ],
+          type:'treemap', roam:false, nodeClick:false,
+          breadcrumb:{show:false},
+          label:{ show:true, formatter: p => `${p.name}\n${money(p.data.baseValue)}`, color:'#fff', fontWeight:800, fontSize:13, lineHeight:20 },
+          upperLabel:{show:false},
+          itemStyle:{gapWidth:8, borderRadius:10},
+          levels:[{ itemStyle:{borderColor:'rgba(255,255,255,.2)', gapWidth:8} }],
           data
         }]
       });
