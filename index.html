@@ -1876,11 +1876,26 @@
     }
     function renderLotTreemap() {
       const lots = filteredLots().map(l => {
-        const all = l.isLeased ? (monthlyRentForLot(l, DATA.fact.start) + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
-        return { name:l.lot, value:Math.max(mln(all), 0.01), rawValue:all, tenant:l.isLeased ? l.tenant : 'Вакантный лот', mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.14)', borderWidth:2 } };
+        const base = l.isLeased ? monthlyRentForLot(l, DATA.fact.start) : marketMonthlyRentForLot(l, DATA.fact.start);
+        const all  = l.isLeased ? (base + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
+        return { name:l.lot, value:Math.max(mln(all), 0.01), baseValue:base, rawValue:all, tenant:l.isLeased ? l.tenant : 'Вакантный лот', mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.14)', borderWidth:2 } };
       });
       setChart('lotTreemap', {
-        color:PALETTE, animationDuration:1100, tooltip:{formatter:p=>`<b>${p.name}</b><br>${escapeHtml(p.data.tenant)}<br>${p.data.mode}: ${money(p.data.rawValue)}`, backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}},
+        color:PALETTE, animationDuration:1100,
+        tooltip:{
+          formatter: p => {
+            const d = p.data;
+            if (d.mode === 'Факт') {
+              return `<b>${escapeHtml(p.name)}</b><br>${escapeHtml(d.tenant)}`
+                + `<br>База / мес: <b>${money(d.baseValue)}</b>`
+                + `<br>Всё включено / мес: ${money(d.rawValue)}`;
+            }
+            return `<b>${escapeHtml(p.name)}</b><br>${escapeHtml(d.tenant)}`
+              + `<br>Потенциал базовый / мес: <b>${money(d.baseValue)}</b>`
+              + `<br>Потенциал всё вкл. / мес: ${money(d.rawValue)}`;
+          },
+          backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}
+        },
         series:[{ type:'treemap', roam:true, nodeClick:false, breadcrumb:{show:false}, label:{show:true, formatter:'{b}', color:'#fff', fontWeight:800}, upperLabel:{show:false}, itemStyle:{gapWidth:5,borderRadius:7}, levels:[{itemStyle:{borderColor:'transparent', gapWidth:6}}], data:lots }]
       });
     }
@@ -1895,7 +1910,7 @@
       });
       const rows = Object.entries(by).map(([tenant,v])=>({tenant,...v})).sort((a,b)=>b.all-a.all || b.area-a.area);
       setChart('tenantBar', {
-        animationDuration:900, tooltip:{trigger:'axis', axisPointer:{type:'shadow'}, backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter: params => { const p=params[0]; const r=rows[p.dataIndex]; return `<b>${escapeHtml(r.tenant)}</b><br>Факт / потенциал: ${money(r.all)}<br>Площадь: ${num(r.area,0)} м²`; } },
+        animationDuration:900, tooltip:{trigger:'axis', axisPointer:{type:'shadow'}, backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter: params => { const p=params[0]; const r=rows[p.dataIndex]; return `<b>${escapeHtml(r.tenant)}</b><br>База / мес: <b>${money(r.rent)}</b><br>Всё включено / мес: ${money(r.all)}<br>Площадь: ${num(r.area,0)} м²`; } },
         grid:{top:24,right:28,bottom:34,left:130,containLabel:true}, xAxis:{type:'value', axisLabel:{formatter:v=>v+'M'}, splitLine:{lineStyle:{color:'rgba(17,17,19,.08)'}}}, yAxis:{type:'category', inverse:true, data:rows.map(x=>x.tenant), axisTick:{show:false}, axisLine:{show:false}},
         series:[{type:'bar', data:rows.map(x=>mln(x.all)), barWidth:18, itemStyle:{borderRadius:[0,10,10,0], color:gradient('#C64235','#D88A55',false)}}]
       });
