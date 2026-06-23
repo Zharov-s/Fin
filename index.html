@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Промтехнопарк Митино — финансовый интерактивный дашборд</title>
+<!-- Все интерактивные графики построены на Apache ECharts по адаптированным паттернам официальной библиотеки примеров: line/bar/pie/gauge/treemap, tooltip, legend, dataZoom, toolbox, animation. -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+      --paper:#f8f4ef;
+      --paper2:#eee5dc;
+      --ink:#121417;
+      --ink2:#242126;
+      --muted:#6b625d;
+      --muted2:#9b928b;
+      --white:#ffffff;
+      --line:rgba(17,16,20,.11);
+      --line2:rgba(17,16,20,.20);
+      --dark:#171519;
+      --dark2:#252127;
+      --orange:#C66A3A;
+      --orange2:#D88A55;
+      --orange3:#ffb265;
+      --red:#C64235;
+      --red2:#7F2223;
+      --red3:#ff5a42;
+      --green:#2F6B5B;
+      --green2:#8AB7A0;
+      --mint:#e1f8e9;
+      --violet:#697386;
+      --blue:#4E6F8A;
+      --danger:#C64235;
+      --shadow: 0 24px 80px rgba(55,10,12,.11);
+      --shadow2: 0 18px 50px rgba(55,10,12,.20);
+      --radius: 16px;
+      --radius2: 10px;
+      --ease: cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0; min-height:100vh; color:var(--ink); font-family: "Manrope", Inter, Aptos, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 7% 0%, rgba(255,43,43,.24), transparent 30%),
+        radial-gradient(circle at 30% 8%, rgba(255,106,0,.18), transparent 32%),
+        radial-gradient(circle at 94% 12%, rgba(184,15,26,.18), transparent 34%),
+        linear-gradient(140deg, #ffffff 0%, var(--paper) 42%, #f0e2dc 100%);
+    }
+    body:before {
+      content:""; position:fixed; inset:0; pointer-events:none; opacity:.35; z-index:-1;
+      background-image: linear-gradient(rgba(17,17,19,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,19,.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(circle at 50% 20%, black, transparent 75%);
+    }
+    a { color:inherit; }
+    .wrap { max-width:1680px; margin:0 auto; padding:24px; }
+    .topbar {
+      position:sticky; top:12px; z-index:20; display:flex; gap:14px; align-items:center; justify-content:space-between; padding:10px 12px;
+      border:1px solid rgba(255,255,255,.65); border-radius:16px; background:rgba(248,244,239,.82); backdrop-filter:blur(24px); box-shadow:0 12px 40px rgba(17,17,19,.08);
+    }
+    .brand { display:flex; align-items:center; gap:0; min-width:260px; padding-left:8px; }
+    .brand-title { line-height:1.05; font-weight:800; letter-spacing:-.025em; }
+    .brand-sub { font-size:12px; color:var(--muted); margin-top:4px; font-weight:650; letter-spacing:.01em; }
+    .nav { display:flex; gap:6px; padding:4px; border-radius:12px; background:rgba(255,255,255,.78); border:1px solid rgba(17,17,19,.06); }
+    .nav button {
+      border:0; background:transparent; color:var(--muted); padding:11px 15px; border-radius:9px; font-weight:820; cursor:pointer; transition:.25s var(--ease); white-space:nowrap;
+    }
+    .nav button.active { color:var(--white); background:linear-gradient(135deg, var(--red2), var(--red)); box-shadow:0 10px 28px rgba(255,43,43,.24); }
+    .stamp { font-size:12px; color:var(--muted); padding:0 10px; text-align:right; }
+    .hero {
+      margin-top:24px; display:grid; grid-template-columns: 1.15fr .85fr; gap:22px; align-items:stretch;
+    }
+    .hero-main {
+      position:relative; overflow:hidden; min-height:390px; border-radius:18px; padding:32px; color:#fff;
+      background:
+        radial-gradient(circle at 85% 10%, rgba(255,43,43,.76), transparent 30%),
+        radial-gradient(circle at 10% 90%, rgba(255,106,0,.46), transparent 34%),
+        linear-gradient(145deg, #161315 0%, #25181b 52%, #120f12 100%);
+      box-shadow: var(--shadow2);
+    }
+    .hero-main:before { content:""; position:absolute; inset:-1px; background:linear-gradient(120deg, rgba(255,255,255,.18), transparent 45%, rgba(255,43,43,.26)); pointer-events:none; }
+    .hero-content { position:relative; z-index:2; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; font-weight:760; color:rgba(255,255,255,.82); font-size:13px; padding:8px 12px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08); border-radius:8px; }
+    .eyebrow:before { content:""; width:9px; height:9px; border-radius:50%; background:var(--red); box-shadow:0 0 0 6px rgba(255,43,43,.18); }
+    h1 { margin:22px 0 14px; font-size: clamp(42px, 6vw, 92px); line-height:.94; letter-spacing:-.055em; max-width:960px; }
+    .hero-text { max-width:720px; color:rgba(255,255,255,.74); font-size:17px; line-height:1.55; }
+    .hero-metrics { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; margin-top:26px; max-width:820px; }
+    .glass-pill {
+      padding:16px 18px; border-radius:10px; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.14); backdrop-filter: blur(20px);
+    }
+    .glass-pill small { display:block; color:rgba(255,255,255,.62); font-weight:680; margin-bottom:8px; }
+    .glass-pill strong { font-size:25px; letter-spacing:-.05em; }
+    .hero-chart-card {
+      display:grid; grid-template-rows: auto 1fr; min-height:390px; border-radius:18px; background:rgba(255,255,255,.86); border:1px solid rgba(255,255,255,.76); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .selector-panel { padding:22px; display:grid; gap:12px; grid-template-columns: 1fr 1fr 1fr; align-items:center; }
+    .selector { position:relative; min-width:0; }
+    .selector-label { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:800; margin:0 0 6px 4px; }
+    .selector-btn {
+      width:100%; border:1px solid var(--line); background:linear-gradient(180deg, #fff, #f5f3ef); color:var(--ink); border-radius:8px; padding:12px 40px 12px 14px; text-align:left; font-size:14px; font-weight:820; cursor:pointer; box-shadow:0 8px 20px rgba(17,17,19,.05); position:relative; overflow:hidden;
+    }
+    .selector-btn:after { content:"⌄"; position:absolute; right:13px; top:50%; transform:translateY(-50%); width:24px; height:24px; display:grid; place-items:center; border-radius:6px; color:white; background:linear-gradient(135deg,var(--red),var(--orange2)); box-shadow:0 8px 18px rgba(255,43,43,.27); }
+    .selector.open .selector-btn { border-color:rgba(255,43,43,.55); box-shadow:0 0 0 4px rgba(255,43,43,.13), 0 12px 32px rgba(17,17,19,.09); }
+    .selector-menu {
+      position:absolute; left:0; right:0; top:calc(100% + 8px); z-index:50; max-height:260px; overflow:auto; padding:8px;
+      border-radius:9px; background:rgba(22,18,20,.96); border:1px solid rgba(255,255,255,.12); box-shadow:0 24px 60px rgba(17,17,19,.28); backdrop-filter:blur(20px);
+      transform:translateY(8px) scale(.98); opacity:0; pointer-events:none; transition:.2s var(--ease);
+    }
+    .selector.open .selector-menu { transform:translateY(0) scale(1); opacity:1; pointer-events:auto; }
+    .selector-option {
+      display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 12px; border-radius:7px; color:#f7f5f1; font-weight:760; cursor:pointer; transition:.18s var(--ease); border:1px solid transparent;
+    }
+    .selector-option:hover { background:linear-gradient(135deg, rgba(255,43,43,.30), rgba(255,106,0,.18)); border-color:rgba(255,255,255,.09); }
+    .selector-option.active { background:linear-gradient(135deg, var(--red), var(--orange2)); color:white; }
+    .selector-option.active:after { content:"✓"; }
+    .chart-hero { min-height:274px; padding:0 18px 12px; }
+    .section { display:none; animation: fadeUp .35s var(--ease); }
+    .section.active { display:block; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .grid { display:grid; gap:18px; margin-top:22px; }
+    .grid.kpis { grid-template-columns: repeat(6, minmax(0,1fr)); }
+    .grid.cols-12 { grid-template-columns: repeat(12, minmax(0,1fr)); }
+    .card {
+      position:relative; overflow:hidden; border-radius:var(--radius); background:rgba(255,255,255,.84); border:1px solid rgba(255,255,255,.72); box-shadow:var(--shadow); min-height:120px;
+    }
+    .card.dark { color:white; background:linear-gradient(145deg, #18181b, #252428); border-color:rgba(255,255,255,.09); box-shadow:var(--shadow2); }
+    .card.green { color:white; background:radial-gradient(circle at 100% 0%, rgba(255,43,43,.40), transparent 28%), radial-gradient(circle at 10% 100%, rgba(255,106,0,.28), transparent 34%), linear-gradient(145deg, #1f5a48, #141214 74%); border-color:rgba(255,255,255,.1); }
+    .card.orange { color:white; background:radial-gradient(circle at 12% 12%, rgba(255,255,255,.18), transparent 28%), linear-gradient(145deg, #C64235 0%, #C66A3A 52%, #7F2223 100%); border-color:rgba(255,255,255,.16); }
+    .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px 0; }
+    .card-title { display:flex; align-items:center; gap:12px; font-size:19px; font-weight:850; letter-spacing:-.03em; }
+    .spark-dot { width:14px; height:14px; border-radius:4px; background:linear-gradient(135deg,var(--red),var(--orange2)); box-shadow:0 8px 18px rgba(255,43,43,.30); flex:0 0 auto; }
+    .card-sub { color:var(--muted); font-size:12px; font-weight:700; margin-top:5px; }
+    .card.dark .card-sub, .card.green .card-sub, .card.orange .card-sub { color:rgba(255,255,255,.64); }
+    .kpi { padding:20px; display:grid; grid-template-rows:auto auto 58px; gap:8px; min-height:182px; }
+    .kpi-label { font-weight:780; color:var(--muted); font-size:12px; letter-spacing:.01em; }
+    .kpi-value { font-size: clamp(24px,2.4vw,38px); line-height:1; letter-spacing:-.065em; font-weight:520; white-space:nowrap; }
+    .kpi-hint { font-size:12px; color:var(--muted); font-weight:650; }
+    .card.dark .kpi-label,.card.dark .kpi-hint,.card.green .kpi-label,.card.green .kpi-hint,.card.orange .kpi-label,.card.orange .kpi-hint { color:rgba(255,255,255,.62); }
+    .mini { width:100%; height:56px; }
+    .chart { width:100%; height:390px; padding:0 12px 12px; }
+    .chart.tall { height:470px; }
+    .chart.small { height:300px; }
+    .span-3 { grid-column:span 3; } .span-4 { grid-column:span 4; } .span-5 { grid-column:span 5; } .span-6 { grid-column:span 6; } .span-7 { grid-column:span 7; } .span-8 { grid-column:span 8; } .span-9 { grid-column:span 9; } .span-12 { grid-column:span 12; }
+    .split { display:grid; grid-template-columns: 1.1fr .9fr; gap:18px; }
+    .callout { padding:24px; display:grid; gap:14px; }
+    .callout-title { font-size:36px; line-height:.98; letter-spacing:-.065em; font-weight:840; }
+    .callout-text { color:var(--muted); line-height:1.55; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { padding:8px 11px; border-radius:7px; background:rgba(17,17,19,.06); color:var(--muted); font-size:12px; font-weight:780; border:1px solid var(--line); }
+    .card.dark .chip, .card.green .chip, .card.orange .chip { background:rgba(255,255,255,.10); color:rgba(255,255,255,.72); border-color:rgba(255,255,255,.14); }
+    .table-toolbar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; padding:18px 22px 0; }
+    .tabs { display:flex; gap:6px; flex-wrap:wrap; }
+    .tabs button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:10px 13px; cursor:pointer; font-weight:790; color:var(--muted); transition:.2s var(--ease); }
+    .tabs button.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+    .search { min-width:min(360px,100%); border:1px solid var(--line); background:#fff; padding:12px 15px; border-radius:8px; font-weight:750; outline:none; }
+    .search:focus { border-color:rgba(255,106,0,.5); box-shadow:0 0 0 4px rgba(255,106,0,.12); }
+    .table-wrap { margin:18px 22px 22px; overflow:auto; border-radius:9px; border:1px solid var(--line); max-height:620px; background:#fff; }
+    table { border-collapse:separate; border-spacing:0; width:100%; min-width:900px; font-size:13px; }
+    th, td { padding:12px 13px; border-bottom:1px solid rgba(17,17,19,.075); text-align:left; vertical-align:top; white-space:nowrap; }
+    th { position:sticky; top:0; background:#faf8f4; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; z-index:1; }
+    tr:hover td { background:#fff6ef; }
+    .status { display:inline-flex; align-items:center; gap:6px; padding:6px 9px; border-radius:6px; font-weight:880; font-size:12px; }
+    .status.leased { color:#12513e; background:#dff8e9; }
+    .status.free { color:#8a3b00; background:#ffe5d2; }
+    .footer { margin:26px 0 8px; color:var(--muted); font-size:12px; text-align:center; }
+    .empty { padding:32px; color:var(--muted); text-align:center; }
+    .noecharts { display:none; margin:22px; padding:14px 18px; border-radius:8px; background:#fff1e8; color:#7a3200; font-weight:750; }
+
+    .topbar, .card, .hero-main, .hero-chart-card { outline:1px solid rgba(255,255,255,.18); }
+    h1, .kpi-value, .callout-title { font-family:"Manrope", Inter, Aptos, ui-sans-serif, system-ui, sans-serif; font-weight:800; letter-spacing:-.04em; }
+    .selector-btn:hover, .tabs button:hover, .search:hover { border-color:rgba(255,43,43,.34); }
+    .tabs button.active { background:linear-gradient(135deg,var(--red2),var(--red)); color:#fff; border-color:transparent; box-shadow:0 10px 24px rgba(255,43,43,.18); }
+    tr:hover td { background:#fff0ed; }
+    .status.leased { color:#104936; background:#dff8e9; }
+    .status.free { color:#9b1c1f; background:#ffe4e0; }
+    @media (max-width: 1280px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid.kpis { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-9 { grid-column:span 12; }
+      .selector-panel { grid-template-columns:1fr; }
+    }
+    @media (max-width: 860px) {
+      .wrap { padding:14px; }
+      .topbar { align-items:stretch; border-radius:12px; flex-direction:column; }
+      .nav { overflow:auto; justify-content:flex-start; }
+      .hero-main { padding:24px; border-radius:16px; }
+      .hero-metrics { grid-template-columns:1fr; }
+      .grid.kpis { grid-template-columns: 1fr; }
+      .grid.cols-12 { grid-template-columns:1fr; }
+      .span-12 { grid-column:span 1; }
+      .card { border-radius:14px; }
+      h1 { font-size:44px; }
+      .chart { height:330px; }
+    }
+
+
+    /* Professional refinement: clean UI controls, disciplined typography, restrained accent palette */
+    :root {
+      --paper:#f7f3ee;
+      --paper2:#efe6de;
+      --ink:#101114;
+      --ink2:#222326;
+      --muted:#69625d;
+      --muted2:#a69d96;
+      --line:rgba(16,17,20,.12);
+      --line2:rgba(16,17,20,.20);
+      --red:#C64235;
+      --red2:#7F2223;
+      --red3:#ff5745;
+      --orange:#C66A3A;
+      --orange2:#ff8a21;
+      --green:#2F6B5B;
+      --green2:#8AB7A0;
+      --shadow:0 18px 52px rgba(30,23,19,.10);
+      --shadow2:0 24px 70px rgba(24,16,15,.20);
+      --radius:14px;
+      --radius2:8px;
+    }
+    body {
+      font-family:"Inter", Aptos, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-feature-settings:"cv02","cv03","cv04","cv11";
+      background:
+        radial-gradient(circle at 8% -5%, rgba(226,54,45,.18), transparent 30%),
+        radial-gradient(circle at 90% 8%, rgba(255,106,26,.13), transparent 34%),
+        linear-gradient(145deg,#fff 0%,#f7f3ee 45%,#eee2da 100%);
+    }
+    h1, .kpi-value, .callout-title,
+    .brand-title, .selector-btn, .nav button, .tabs button {
+      font-family:"Inter", Aptos, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      letter-spacing:-.035em;
+    }
+    h1 { letter-spacing:-.065em; font-weight:850; }
+    .topbar {
+      border-radius:14px;
+      background:rgba(255,255,255,.78);
+      border:1px solid rgba(16,17,20,.08);
+      box-shadow:0 16px 50px rgba(22,17,15,.08);
+    }
+    .nav {
+      border-radius:10px;
+      padding:3px;
+      background:rgba(16,17,20,.045);
+      border:1px solid rgba(16,17,20,.055);
+    }
+    .nav button {
+      border-radius:7px;
+      padding:10px 14px;
+      font-size:13px;
+      font-weight:720;
+      letter-spacing:-.01em;
+      color:#5f5b57;
+    }
+    .nav button.active {
+      color:#fff;
+      background:#111214;
+      box-shadow:0 8px 22px rgba(16,17,20,.16);
+    }
+    .hero-main, .hero-chart-card, .card {
+      border-radius:14px;
+    }
+    .glass-pill, .chip, .status, .tabs button, .search, .table-wrap, .noecharts, .eyebrow {
+      border-radius:8px;
+    }
+
+    .selector-panel {
+      padding:18px 20px 12px;
+      gap:14px;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.38));
+      border-bottom:1px solid rgba(16,17,20,.055);
+    }
+    .selector {
+      position:relative;
+      min-width:0;
+      isolation:isolate;
+    }
+    .selector-label {
+      margin:0 0 7px;
+      padding-left:1px;
+      color:#7a736d;
+      font-size:10px;
+      font-weight:760;
+      letter-spacing:.10em;
+      line-height:1;
+    }
+    .selector-btn {
+      height:50px;
+      width:100%;
+      display:block;
+      padding:0 44px 0 15px;
+      border:1px solid rgba(16,17,20,.13);
+      border-radius:9px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,248,245,.96));
+      color:#121316;
+      text-align:left;
+      font-size:16px;
+      font-weight:720;
+      line-height:48px;
+      cursor:pointer;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.90),
+        0 10px 26px rgba(16,17,20,.045);
+      transition:border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease), background .18s var(--ease);
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+    }
+    .selector-btn:before {
+      content:"";
+      position:absolute;
+      left:0;
+      top:9px;
+      bottom:9px;
+      width:3px;
+      border-radius:0 3px 3px 0;
+      background:linear-gradient(180deg,var(--red),var(--orange));
+      opacity:0;
+      transition:opacity .18s var(--ease);
+    }
+    .selector-btn:after {
+      content:"";
+      position:absolute;
+      right:18px;
+      top:50%;
+      width:8px;
+      height:8px;
+      border:solid #b43a2c;
+      border-width:0 1.8px 1.8px 0;
+      transform:translateY(-62%) rotate(45deg);
+      border-radius:0;
+      background:transparent;
+      box-shadow:none;
+      transition:transform .18s var(--ease), border-color .18s var(--ease);
+    }
+    .selector-btn:hover {
+      border-color:rgba(226,54,45,.32);
+      background:#fff;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.95),
+        0 13px 30px rgba(16,17,20,.075);
+      transform:translateY(-1px);
+    }
+    .selector-btn:hover:before,
+    .selector.open .selector-btn:before { opacity:1; }
+    .selector.open .selector-btn {
+      border-color:rgba(226,54,45,.44);
+      background:#fff;
+      box-shadow:
+        0 0 0 4px rgba(226,54,45,.085),
+        0 18px 40px rgba(16,17,20,.10);
+      transform:none;
+    }
+    .selector.open .selector-btn:after {
+      transform:translateY(-20%) rotate(-135deg);
+      border-color:#C64235;
+    }
+    .selector-menu {
+      left:0;
+      right:0;
+      top:calc(100% + 8px);
+      max-height:268px;
+      padding:6px;
+      border-radius:10px;
+      background:rgba(255,255,255,.98);
+      border:1px solid rgba(16,17,20,.12);
+      box-shadow:0 24px 54px rgba(16,17,20,.16);
+      backdrop-filter:blur(18px);
+      transform:translateY(6px) scale(.985);
+      color:#121316;
+    }
+    .selector-option {
+      position:relative;
+      min-height:42px;
+      padding:10px 12px 10px 13px;
+      border-radius:7px;
+      color:#1d1d20;
+      font-size:14px;
+      font-weight:620;
+      letter-spacing:-.015em;
+      background:transparent;
+      border:1px solid transparent;
+    }
+    .selector-option:hover {
+      background:#fff3ee;
+      border-color:rgba(226,54,45,.12);
+      color:#111214;
+    }
+    .selector-option.active {
+      background:linear-gradient(90deg,rgba(226,54,45,.105),rgba(255,106,26,.07));
+      color:#111214;
+      border-color:rgba(226,54,45,.16);
+      font-weight:760;
+    }
+    .selector-option.active:before {
+      content:"";
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:#C64235;
+      box-shadow:0 0 0 4px rgba(226,54,45,.12);
+      margin-right:4px;
+      flex:0 0 auto;
+    }
+    .selector-option.active:after {
+      content:"✓";
+      color:#C64235;
+      font-weight:850;
+      margin-left:auto;
+    }
+    .selector-menu::-webkit-scrollbar { width:8px; }
+    .selector-menu::-webkit-scrollbar-track { background:transparent; }
+    .selector-menu::-webkit-scrollbar-thumb { background:rgba(16,17,20,.14); border-radius:8px; border:2px solid #fff; }
+
+    .tabs { gap:7px; }
+    .tabs button {
+      border-radius:7px;
+      padding:10px 13px;
+      font-size:13px;
+      font-weight:700;
+      box-shadow:none;
+    }
+    .tabs button.active {
+      background:#111214;
+      color:#fff;
+      box-shadow:0 8px 20px rgba(16,17,20,.14);
+    }
+    .search {
+      border-radius:8px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .card {
+      box-shadow:0 16px 48px rgba(20,17,15,.08);
+    }
+    .card.orange {
+      background:linear-gradient(145deg,#C64235 0%,#C66A3A 58%,#9f1c1f 100%);
+    }
+    .card.green {
+      background:radial-gradient(circle at 88% 6%, rgba(226,54,45,.32), transparent 28%),linear-gradient(145deg,#216f59 0%,#131416 78%);
+    }
+    .spark-dot {
+      border-radius:3px;
+      background:linear-gradient(135deg,#C64235,#C66A3A);
+    }
+    .status.leased { color:#0d4635; background:#e2f7ec; }
+    .status.free { color:#8a2220; background:#ffe6e0; }
+
+    @media (max-width:1280px) {
+      .selector-panel { grid-template-columns:1fr; }
+    }
+
+  
+
+    /* Executive redesign: restrained hero, cleaner controls, premium financial layout */
+    :root {
+      --paper:#faf7f2;
+      --paper2:#f0e7df;
+      --ink:#111217;
+      --ink2:#24252b;
+      --muted:#6a625d;
+      --line:rgba(17,18,23,.105);
+      --red:#C64235;
+      --red2:#7F2223;
+      --orange:#C66A3A;
+      --orange2:#D88A55;
+      --green:#2F6B5B;
+      --shadow:0 16px 48px rgba(32,24,21,.075);
+      --shadow2:0 22px 64px rgba(28,18,17,.14);
+      --radius:12px;
+      --radius2:7px;
+    }
+    body {
+      font-family:"IBM Plex Sans", Inter, Aptos, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-variation-settings:normal;
+      letter-spacing:-.006em;
+      background:
+        radial-gradient(circle at 10% -6%, rgba(215,45,40,.11), transparent 28%),
+        radial-gradient(circle at 92% 8%, rgba(255,106,26,.10), transparent 30%),
+        linear-gradient(145deg,#fff 0%,#faf7f2 48%,#efe5dd 100%);
+    }
+    .wrap { max-width:1600px; padding:24px 28px 32px; }
+    .topbar {
+      border-radius:12px;
+      background:rgba(255,255,255,.84);
+      border:1px solid rgba(17,18,23,.075);
+      box-shadow:0 12px 38px rgba(32,24,21,.065);
+    }
+    .brand-title { font-weight:780; letter-spacing:-.025em; }
+    .brand-sub { color:#7a736d; font-weight:600; }
+    .nav button { font-weight:650; }
+    .hero {
+      margin-top:22px;
+      grid-template-columns:minmax(0,1.08fr) minmax(430px,.92fr);
+      gap:18px;
+    }
+    .hero-main {
+      min-height:314px;
+      padding:30px;
+      color:var(--ink);
+      border-radius:16px;
+      border:1px solid rgba(17,18,23,.075);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.94) 56%, rgba(255,241,232,.92) 100%),
+        radial-gradient(circle at 92% 12%, rgba(215,45,40,.18), transparent 34%);
+      box-shadow:var(--shadow);
+    }
+    .hero-main:before {
+      content:"";
+      position:absolute;
+      inset:auto 0 0 auto;
+      width:38%;
+      height:100%;
+      background:
+        linear-gradient(135deg, rgba(215,45,40,.14), rgba(255,106,26,.07) 55%, transparent 80%);
+      pointer-events:none;
+      border-left:1px solid rgba(215,45,40,.06);
+    }
+    .hero-main:after {
+      content:"";
+      position:absolute;
+      right:28px;
+      top:28px;
+      width:92px;
+      height:4px;
+      border-radius:0;
+      background:linear-gradient(90deg,var(--red),var(--orange));
+      opacity:.9;
+    }
+    .hero-content {
+      position:relative;
+      z-index:2;
+      min-height:250px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 336px;
+      grid-template-rows:auto auto 1fr;
+      column-gap:42px;
+      row-gap:12px;
+      align-items:start;
+    }
+    .eyebrow {
+      grid-column:1 / 3;
+      width:max-content;
+      max-width:100%;
+      color:#5e5651;
+      font-size:12px;
+      font-weight:680;
+      letter-spacing:.01em;
+      padding:8px 11px;
+      border-radius:6px;
+      border:1px solid rgba(17,18,23,.095);
+      background:rgba(255,255,255,.74);
+      box-shadow:0 8px 24px rgba(25,20,18,.045);
+    }
+    .eyebrow:before {
+      width:7px;
+      height:7px;
+      background:var(--red);
+      box-shadow:0 0 0 5px rgba(215,45,40,.105);
+    }
+    h1 {
+      grid-column:1;
+      margin:18px 0 4px;
+      max-width:720px;
+      color:#121217;
+      font-family:"IBM Plex Sans", Inter, Aptos, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-size:clamp(38px,4.1vw,64px);
+      line-height:1.02;
+      font-weight:760;
+      letter-spacing:-.055em;
+    }
+    .hero-text {
+      grid-column:1;
+      max-width:660px;
+      color:#5f5651;
+      font-size:16px;
+      line-height:1.55;
+      font-weight:450;
+    }
+    .hero-metrics {
+      grid-column:2;
+      grid-row:2 / 4;
+      align-self:stretch;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin:12px 0 0;
+      max-width:none;
+    }
+    .glass-pill {
+      display:grid;
+      align-content:center;
+      min-height:72px;
+      padding:14px 16px;
+      border-radius:8px;
+      background:rgba(255,255,255,.76);
+      border:1px solid rgba(17,18,23,.09);
+      box-shadow:0 10px 28px rgba(35,24,20,.055);
+      backdrop-filter:none;
+    }
+    .glass-pill small {
+      color:#706760;
+      font-size:12px;
+      font-weight:650;
+      margin-bottom:6px;
+      letter-spacing:-.005em;
+    }
+    .glass-pill strong {
+      color:#171418;
+      font-size:26px;
+      line-height:1;
+      font-weight:760;
+      letter-spacing:-.045em;
+    }
+    .glass-pill:nth-child(2) {
+      background:linear-gradient(135deg,#19171a 0%,#2a1f22 62%,#431518 100%);
+      border-color:rgba(255,255,255,.12);
+      box-shadow:0 18px 38px rgba(45,17,18,.18);
+    }
+    .glass-pill:nth-child(2) small { color:rgba(255,255,255,.66); }
+    .glass-pill:nth-child(2) strong { color:#fff; }
+    .hero-chart-card {
+      min-height:314px;
+      border-radius:16px;
+      border:1px solid rgba(17,18,23,.08);
+      background:rgba(255,255,255,.86);
+      box-shadow:var(--shadow);
+    }
+    .selector-panel {
+      padding:18px 18px 12px;
+      gap:12px;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      background:rgba(255,255,255,.68);
+      border-bottom:1px solid rgba(17,18,23,.06);
+    }
+    .selector-label {
+      font-size:10px;
+      letter-spacing:.08em;
+      font-weight:680;
+      color:#8a817a;
+      margin-bottom:6px;
+    }
+    .selector-btn {
+      height:46px;
+      line-height:44px;
+      border-radius:7px;
+      padding:0 36px 0 13px;
+      font-size:14px;
+      font-weight:650;
+      letter-spacing:-.018em;
+      background:#fff;
+      border:1px solid rgba(17,18,23,.12);
+      box-shadow:0 8px 20px rgba(17,18,23,.035);
+    }
+    .selector-btn:before { top:10px; bottom:10px; width:2px; border-radius:0; }
+    .selector-btn:after {
+      right:15px;
+      width:7px;
+      height:7px;
+      border-color:#a9473a;
+      border-width:0 1.5px 1.5px 0;
+    }
+    .selector-btn:hover {
+      transform:none;
+      border-color:rgba(215,45,40,.30);
+      box-shadow:0 10px 24px rgba(17,18,23,.055);
+    }
+    .selector.open .selector-btn {
+      box-shadow:0 0 0 3px rgba(215,45,40,.07), 0 12px 28px rgba(17,18,23,.075);
+      border-color:rgba(215,45,40,.38);
+    }
+    .selector-menu {
+      top:calc(100% + 6px);
+      border-radius:8px;
+      padding:5px;
+      border:1px solid rgba(17,18,23,.11);
+      box-shadow:0 20px 48px rgba(18,18,23,.14);
+    }
+    .selector-option {
+      min-height:39px;
+      border-radius:6px;
+      font-size:13px;
+      font-weight:560;
+      padding:9px 10px 9px 11px;
+    }
+    .selector-option.active {
+      background:#fff1ec;
+      border-color:rgba(215,45,40,.14);
+      font-weight:680;
+    }
+    .chart-hero { min-height:238px; padding:0 14px 10px; }
+    .grid { gap:16px; margin-top:18px; }
+    .card { border-radius:12px; box-shadow:0 14px 42px rgba(27,23,20,.07); border-color:rgba(17,18,23,.075); }
+    .card-head { padding:20px 22px 0; }
+    .card-title { font-size:18px; font-weight:720; letter-spacing:-.025em; }
+    .spark-dot { width:10px; height:10px; border-radius:2px; box-shadow:none; }
+    .kpi-value { font-family:"IBM Plex Sans", Inter, Aptos, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; font-weight:690; letter-spacing:-.055em; }
+
+    @media (max-width:1280px) {
+      .hero { grid-template-columns:1fr; }
+      .hero-content { grid-template-columns:minmax(0,1fr) 320px; }
+    }
+    @media (max-width:860px) {
+      .wrap { padding:14px; }
+      .hero-main { padding:22px; min-height:auto; }
+      .hero-content { display:block; min-height:auto; }
+      h1 { font-size:38px; margin-top:16px; }
+      .hero-text { font-size:15px; }
+      .hero-metrics { margin-top:18px; }
+      .selector-panel { grid-template-columns:1fr; }
+    }
+
+
+
+    /* Final premium cleanup: opaque menus, balanced hero, no visual overlap */
+    :root {
+      --paper:#faf8f5;
+      --paper2:#f1e9e3;
+      --ink:#111217;
+      --ink2:#262329;
+      --muted:#6b625d;
+      --line:rgba(17,18,23,.105);
+      --red:#C64235;
+      --red2:#7F2223;
+      --orange:#C66A3A;
+      --orange2:#D88A55;
+      --softRed:#fff2ef;
+      --shadow:0 14px 42px rgba(31,25,22,.07);
+      --shadow2:0 22px 58px rgba(30,18,17,.12);
+      --radius:12px;
+      --radius2:7px;
+    }
+    body {
+      font-family:"Onest", Inter, Aptos, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 9% -8%, rgba(223,52,45,.11), transparent 29%),
+        radial-gradient(circle at 92% 5%, rgba(255,106,26,.08), transparent 31%),
+        linear-gradient(145deg,#ffffff 0%,#faf8f5 48%,#efe7e0 100%);
+      color:var(--ink);
+    }
+    h1, .kpi-value, .callout-title, .brand-title, .selector-btn, .nav button, .tabs button {
+      font-family:"Onest", Inter, Aptos, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    .hero {
+      grid-template-columns:minmax(0,1.02fr) minmax(440px,.98fr);
+      gap:20px;
+      align-items:stretch;
+    }
+    .hero-main {
+      min-height:360px;
+      padding:34px 34px 30px;
+      overflow:hidden;
+      color:var(--ink);
+      border-radius:14px;
+      border:1px solid rgba(17,18,23,.08);
+      background:
+        radial-gradient(circle at 94% 0%, rgba(223,52,45,.11), transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,249,245,.97) 58%, rgba(255,244,238,.94));
+      box-shadow:var(--shadow);
+    }
+    .hero-main:before {
+      inset:auto 0 0 auto;
+      width:48%;
+      height:100%;
+      opacity:.55;
+      background:linear-gradient(135deg, transparent 0%, rgba(223,52,45,.08) 48%, rgba(255,106,26,.08) 100%);
+      border-left:1px solid rgba(223,52,45,.045);
+    }
+    .hero-main:after {
+      right:34px;
+      top:30px;
+      width:108px;
+      height:3px;
+      background:linear-gradient(90deg,var(--red),var(--orange));
+      opacity:.78;
+    }
+    .hero-content {
+      display:grid;
+      grid-template-columns:1fr;
+      grid-template-rows:auto auto auto auto;
+      min-height:296px;
+      row-gap:0;
+      column-gap:0;
+      align-content:start;
+    }
+    .eyebrow {
+      grid-column:1;
+      width:max-content;
+      max-width:100%;
+      color:#5c5551;
+      background:#fff;
+      border:1px solid rgba(17,18,23,.09);
+      box-shadow:0 8px 24px rgba(25,20,18,.045);
+      border-radius:7px;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:650;
+    }
+    .eyebrow:before {
+      width:7px;
+      height:7px;
+      background:var(--red);
+      box-shadow:0 0 0 5px rgba(223,52,45,.10);
+    }
+    h1 {
+      grid-column:1;
+      max-width:680px;
+      margin:30px 0 12px;
+      color:#121217;
+      font-size:clamp(36px,3.35vw,58px);
+      line-height:1.04;
+      font-weight:700;
+      letter-spacing:-.045em;
+      text-wrap:balance;
+    }
+    .hero-text {
+      grid-column:1;
+      max-width:660px;
+      color:#645c57;
+      font-size:16.5px;
+      line-height:1.58;
+      font-weight:450;
+    }
+    .hero-metrics {
+      grid-column:1;
+      grid-row:auto;
+      align-self:end;
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      margin:28px 0 0;
+      max-width:860px;
+    }
+    .glass-pill {
+      min-height:88px;
+      padding:16px 17px;
+      border-radius:8px;
+      background:#fff;
+      border:1px solid rgba(17,18,23,.09);
+      box-shadow:0 10px 28px rgba(26,22,20,.055);
+      backdrop-filter:none;
+    }
+    .glass-pill small {
+      color:#756d67;
+      font-size:12px;
+      font-weight:650;
+      margin-bottom:9px;
+    }
+    .glass-pill strong {
+      color:#141419;
+      font-size:25px;
+      line-height:1;
+      font-weight:720;
+      letter-spacing:-.045em;
+      white-space:nowrap;
+    }
+    .glass-pill:nth-child(2) {
+      background:linear-gradient(135deg,#181719 0%,#251b1d 58%,#341617 100%);
+      border-color:rgba(255,255,255,.12);
+      box-shadow:0 16px 34px rgba(45,17,18,.15);
+    }
+    .glass-pill:nth-child(2) small { color:rgba(255,255,255,.66); }
+    .glass-pill:nth-child(2) strong { color:#fff; }
+    .hero-chart-card {
+      min-height:360px;
+      border-radius:14px;
+      border:1px solid rgba(17,18,23,.08);
+      background:#fff;
+      box-shadow:var(--shadow);
+      overflow:visible;
+    }
+    .selector-panel {
+      position:relative;
+      z-index:5000;
+      padding:20px 20px 14px;
+      gap:12px;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      background:#fff;
+      border-bottom:1px solid rgba(17,18,23,.07);
+      border-radius:14px 14px 0 0;
+      overflow:visible;
+    }
+    .selector {
+      position:relative;
+      z-index:1;
+      isolation:isolate;
+    }
+    .selector.open { z-index:9000; }
+    .selector-label {
+      margin:0 0 7px;
+      color:#776f69;
+      font-size:10px;
+      line-height:1;
+      font-weight:700;
+      letter-spacing:.08em;
+    }
+    .selector-btn {
+      height:44px;
+      line-height:42px;
+      border-radius:7px;
+      padding:0 36px 0 13px;
+      font-size:14px;
+      font-weight:600;
+      letter-spacing:-.015em;
+      color:#15161a;
+      background:#fff;
+      border:1px solid rgba(17,18,23,.13);
+      box-shadow:0 6px 16px rgba(17,18,23,.035);
+      transform:none;
+    }
+    .selector-btn:before {
+      top:9px;
+      bottom:9px;
+      width:2px;
+      border-radius:0;
+      background:linear-gradient(180deg,var(--red),var(--orange));
+    }
+    .selector-btn:after {
+      right:15px;
+      width:7px;
+      height:7px;
+      border-color:#9d342c;
+      border-width:0 1.5px 1.5px 0;
+      background:transparent;
+      box-shadow:none;
+    }
+    .selector-btn:hover {
+      border-color:rgba(223,52,45,.28);
+      background:#fff;
+      box-shadow:0 9px 22px rgba(17,18,23,.055);
+      transform:none;
+    }
+    .selector.open .selector-btn {
+      border-color:rgba(223,52,45,.42);
+      background:#fff;
+      box-shadow:0 0 0 3px rgba(223,52,45,.075), 0 12px 28px rgba(17,18,23,.08);
+    }
+    .selector-menu {
+      position:absolute;
+      left:0;
+      right:0;
+      top:calc(100% + 7px);
+      z-index:99999;
+      max-height:270px;
+      overflow:auto;
+      padding:6px;
+      border-radius:8px;
+      background:#ffffff !important;
+      color:#15161a;
+      border:1px solid rgba(17,18,23,.12);
+      box-shadow:0 24px 56px rgba(17,18,23,.18);
+      backdrop-filter:none !important;
+      -webkit-backdrop-filter:none !important;
+      opacity:0;
+      transform:translateY(6px);
+      pointer-events:none;
+    }
+    .selector.open .selector-menu {
+      opacity:1 !important;
+      transform:translateY(0);
+      pointer-events:auto;
+    }
+    .selector-option {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      min-height:38px;
+      padding:9px 10px;
+      border-radius:6px;
+      color:#1a1b20;
+      background:#fff;
+      border:1px solid transparent;
+      font-size:13.5px;
+      font-weight:560;
+      letter-spacing:-.012em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .selector-option:hover {
+      background:#fff4f1;
+      border-color:rgba(223,52,45,.13);
+      color:#111217;
+    }
+    .selector-option.active {
+      background:#fff1ed;
+      border-color:rgba(223,52,45,.18);
+      color:#111217;
+      font-weight:700;
+    }
+    .selector-option.active:before {
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:var(--red);
+      box-shadow:0 0 0 4px rgba(223,52,45,.10);
+      margin:0 2px 0 0;
+      flex:0 0 auto;
+    }
+    .selector-option.active:after {
+      content:"✓";
+      color:var(--red);
+      font-weight:800;
+      margin-left:auto;
+      flex:0 0 auto;
+    }
+    .chart-hero {
+      position:relative;
+      z-index:1;
+      min-height:274px;
+      padding:0 12px 12px;
+      overflow:hidden;
+    }
+    .card, .topbar, .hero-main, .hero-chart-card {
+      outline:none;
+    }
+    @media (max-width:1280px) {
+      .hero { grid-template-columns:1fr; }
+      .hero-main { min-height:auto; }
+      .hero-content { min-height:auto; }
+      .hero-chart-card { min-height:330px; }
+    }
+    @media (max-width:860px) {
+      .hero-main { padding:24px; }
+      h1 { font-size:36px; }
+      .hero-metrics { grid-template-columns:1fr; }
+      .selector-panel { grid-template-columns:1fr; }
+    }
+
+  
+
+    /* Vacancy analytics additions */
+    .hero-metrics { grid-template-columns: repeat(4, minmax(0,1fr)); max-width:980px; }
+    .vacancy-positive { color:#0d4635; font-weight:800; }
+    .vacancy-loss { color:#9b1c1f; font-weight:800; }
+    @media (max-width:1100px) { .hero-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:860px) { .hero-metrics { grid-template-columns:1fr; } }
+
+  
+
+    /* GitHub-ready professional finish: logo, CSS-only glyphs, restrained gradients */
+    :root {
+      --paper:#fbf8f4;
+      --paper2:#efe7df;
+      --ink:#121417;
+      --ink2:#24272c;
+      --muted:#6f6761;
+      --muted2:#a59a91;
+      --line:rgba(18,20,23,.105);
+      --brand-red:#d71920;
+      --accent:#C64235;
+      --accent2:#D88A55;
+      --accent-dark:#7F2223;
+      --olive:#2F6B5B;
+      --olive2:#8AB7A0;
+      --charcoal:#121417;
+      --charcoal2:#1a1d20;
+      --shadow:0 16px 42px rgba(34,28,23,.07);
+      --shadow2:0 22px 58px rgba(26,18,16,.13);
+    }
+    body {
+      background:
+        radial-gradient(circle at 14% -10%, rgba(198,66,53,.085), transparent 34%),
+        radial-gradient(circle at 92% 2%, rgba(47,107,91,.055), transparent 28%),
+        linear-gradient(145deg,#ffffff 0%,#fbf8f4 48%,#efe7df 100%);
+      color:var(--ink);
+    }
+    body:before { opacity:.18; }
+    .wrap { max-width:1600px; }
+    .topbar {
+      background:rgba(255,255,255,.88);
+      border:1px solid rgba(18,20,23,.075);
+      box-shadow:0 18px 48px rgba(34,28,23,.075);
+    }
+    .brand { gap:14px; min-width:360px; padding-left:6px; align-items:center; }
+    .brand-logo-frame {
+      flex:0 0 auto;
+      height:34px;
+      width:172px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:5px 8px;
+      border-radius:8px;
+      background:#d71920;
+      box-shadow:0 10px 24px rgba(132,24,27,.14);
+      overflow:hidden;
+    }
+    .brand-logo-img { display:block; width:100%; height:100%; object-fit:contain; }
+    .brand-copy { min-width:0; }
+    .brand-title { color:#15161a; font-weight:760; letter-spacing:-.025em; white-space:nowrap; }
+    .brand-sub { color:#736b64; font-weight:620; }
+    .nav { background:rgba(18,20,23,.045); border-color:rgba(18,20,23,.065); }
+    .nav button { color:#625d58; }
+    .nav button.active { background:#15161a; color:#fff; box-shadow:0 10px 26px rgba(18,20,23,.16); }
+    .hero-main {
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.985), rgba(255,251,247,.97) 62%, rgba(246,239,232,.96)),
+        radial-gradient(circle at 92% 0%, rgba(198,66,53,.10), transparent 36%);
+      border-color:rgba(18,20,23,.08);
+      box-shadow:var(--shadow);
+    }
+    .hero-main:before {
+      background:linear-gradient(135deg, transparent 0%, rgba(127,34,35,.055) 45%, rgba(47,107,91,.065) 100%);
+      opacity:.68;
+    }
+    .hero-main:after { background:linear-gradient(90deg,#7F2223,#D88A55); opacity:.68; }
+    .hero-chart-card, .card { background:rgba(255,255,255,.90); border-color:rgba(18,20,23,.075); box-shadow:var(--shadow); }
+    .card.dark {
+      background:
+        radial-gradient(circle at 100% 0%, rgba(198,66,53,.10), transparent 32%),
+        linear-gradient(145deg,#121417 0%,#1a1d20 100%);
+      border-color:rgba(255,255,255,.08);
+    }
+    .card.green {
+      background:
+        radial-gradient(circle at 88% 4%, rgba(198,66,53,.14), transparent 30%),
+        linear-gradient(145deg,#255f52 0%,#121719 80%);
+      border-color:rgba(255,255,255,.09);
+    }
+    .card.orange {
+      background:linear-gradient(145deg,#8B2728 0%,#C64235 56%,#D88A55 100%);
+      border-color:rgba(255,255,255,.12);
+    }
+    .glass-pill:nth-child(2) {
+      background:linear-gradient(135deg,#15161a 0%,#211b1c 60%,#331d1d 100%);
+      box-shadow:0 16px 34px rgba(35,24,22,.13);
+    }
+    .selector-btn { border-color:rgba(18,20,23,.13); box-shadow:0 7px 18px rgba(18,20,23,.04); }
+    .selector-btn:before { background:linear-gradient(180deg,#7F2223,#D88A55); }
+    .selector-btn:after { border-color:#8B3D35; }
+    .selector-btn:hover { border-color:rgba(198,66,53,.28); box-shadow:0 10px 24px rgba(18,20,23,.06); }
+    .selector.open .selector-btn { border-color:rgba(198,66,53,.40); box-shadow:0 0 0 3px rgba(198,66,53,.075), 0 12px 28px rgba(18,20,23,.08); }
+    .selector-option:hover { background:#fff6f1; border-color:rgba(198,66,53,.12); }
+    .selector-option.active { background:#fff2ed; border-color:rgba(198,66,53,.18); }
+    .selector-option.active:after { color:#C64235; }
+
+    /* CSS-only geometric glyphs inspired by the referenced Uiverse card family. */
+    .spark-dot,
+    .eyebrow:before,
+    .selector-option.active:before {
+      content:"";
+      position:relative;
+      width:20px;
+      height:20px;
+      border-radius:7px;
+      flex:0 0 20px;
+      background:linear-gradient(135deg,#7F2223 0%,#C64235 55%,#D88A55 100%);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.20), 0 8px 18px rgba(127,34,35,.18);
+      transform:none;
+      margin:0;
+    }
+    .spark-dot:before,
+    .eyebrow:after,
+    .selector-option.active:before {
+      box-sizing:border-box;
+    }
+    .spark-dot:before,
+    .eyebrow:after {
+      content:"";
+      position:absolute;
+      inset:5px;
+      border-left:2px solid rgba(255,255,255,.88);
+      border-bottom:2px solid rgba(255,255,255,.88);
+      transform:rotate(-45deg) translate(1px,-1px);
+      transform-origin:center;
+      border-radius:1px;
+    }
+    .spark-dot:after {
+      content:"";
+      position:absolute;
+      width:5px;
+      height:5px;
+      right:4px;
+      top:4px;
+      border-radius:2px;
+      background:rgba(255,255,255,.78);
+    }
+    .eyebrow { gap:10px; }
+    .eyebrow:before { box-shadow:inset 0 1px 0 rgba(255,255,255,.20), 0 7px 16px rgba(127,34,35,.15); }
+    .selector-option.active:before {
+      width:18px;
+      height:18px;
+      flex-basis:18px;
+      border-radius:6px;
+      background:
+        linear-gradient(135deg,#7F2223,#C64235 55%,#D88A55);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.20), 0 6px 12px rgba(127,34,35,.14);
+    }
+    .selector-option.active:before {
+      border:0;
+    }
+    .selector-option.active:after { content:"✓"; font-size:16px; }
+    .card-title { gap:12px; align-items:center; }
+    .chart-empty { display:grid; place-items:center; height:100%; min-height:260px; color:rgba(255,255,255,.70); font-weight:760; }
+    .card:not(.dark):not(.green):not(.orange) .chart-empty { color:#746c66; }
+    .status.leased { color:#174b3d; background:#e4f3ec; }
+    .status.free { color:#7F2223; background:#fff0ec; }
+    .tabs button.active { background:#15161a; box-shadow:0 8px 20px rgba(18,20,23,.14); }
+    .search:focus { border-color:rgba(198,66,53,.42); box-shadow:0 0 0 4px rgba(198,66,53,.10); }
+    @media (max-width:1100px) {
+      .brand { min-width:0; }
+      .brand-logo-frame { width:150px; height:32px; }
+    }
+    @media (max-width:860px) {
+      .brand { gap:10px; }
+      .brand-logo-frame { width:132px; height:30px; }
+      .brand-title { white-space:normal; }
+    }
+
+  
+
+    /* Final safety override for glyph rendering: no leftover circular dots. */
+    .eyebrow { position:relative; }
+    .eyebrow:after { content:none !important; display:none !important; }
+    .spark-dot,
+    .eyebrow:before,
+    .selector-option.active:before {
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 16V8h8' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7.5 8.5l9 9' stroke='white' stroke-opacity='.74' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E"),
+        linear-gradient(135deg,#7F2223 0%,#C64235 55%,#D88A55 100%);
+      background-size:14px 14px, 100% 100%;
+      background-position:center, center;
+      background-repeat:no-repeat, no-repeat;
+    }
+    .spark-dot:before,
+    .spark-dot:after { content:none !important; display:none !important; }
+
+  
+
+    /* Final production polish: clean logo, Lucide SVG icons, calmer executive gradients */
+    :root {
+      --paper:#fbfaf7;
+      --paper2:#eee8e1;
+      --ink:#121417;
+      --ink2:#25282d;
+      --muted:#6e6862;
+      --muted2:#a79e96;
+      --line:rgba(18,20,23,.095);
+      --accent:#b63a35;
+      --accent2:#c98055;
+      --accent-dark:#762427;
+      --olive:#2f675a;
+      --olive2:#7ea895;
+      --charcoal:#121417;
+      --charcoal2:#1a1d20;
+      --surface:#ffffff;
+      --softRed:#fff4f1;
+      --shadow:0 14px 38px rgba(34,28,23,.065);
+      --shadow2:0 20px 54px rgba(28,21,18,.12);
+      --icon-chart:url("assets/icons/chart-column-increasing.svg");
+      --icon-gauge:url("assets/icons/gauge.svg");
+      --icon-pie:url("assets/icons/chart-pie.svg");
+      --icon-layout:url("assets/icons/layout-dashboard.svg");
+      --icon-building:url("assets/icons/building-2.svg");
+      --icon-banknote:url("assets/icons/banknote.svg");
+      --icon-ruler:url("assets/icons/ruler.svg");
+      --icon-table:url("assets/icons/table-2.svg");
+      --icon-receipt:url("assets/icons/receipt-text.svg");
+      --icon-users:url("assets/icons/users.svg");
+      --icon-landmark:url("assets/icons/landmark.svg");
+      --icon-check:url("assets/icons/check.svg");
+      --icon-chevron:url("assets/icons/chevron-down.svg");
+      --icon-default:var(--icon-chart);
+    }
+    body {
+      background:
+        radial-gradient(circle at 12% -10%, rgba(118,36,39,.055), transparent 34%),
+        radial-gradient(circle at 92% 3%, rgba(47,103,90,.050), transparent 30%),
+        linear-gradient(145deg,#ffffff 0%,#fbfaf7 52%,#eee8e1 100%) !important;
+      color:var(--ink);
+    }
+    body:before { opacity:.14 !important; }
+    .topbar {
+      background:rgba(255,255,255,.90) !important;
+      border:1px solid rgba(18,20,23,.075) !important;
+      box-shadow:0 16px 44px rgba(34,28,23,.07) !important;
+    }
+    .brand { gap:12px !important; min-width:330px !important; padding-left:6px !important; align-items:center !important; }
+    .brand-logo-frame {
+      width:178px !important;
+      height:28px !important;
+      padding:0 !important;
+      background:transparent !important;
+      border:0 !important;
+      box-shadow:none !important;
+      border-radius:0 !important;
+      overflow:visible !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:flex-start !important;
+    }
+    .brand-logo-img {
+      width:178px !important;
+      height:28px !important;
+      object-fit:contain !important;
+      object-position:left center !important;
+      display:block !important;
+    }
+    .brand-title { color:#15161a !important; font-weight:760 !important; letter-spacing:-.025em !important; }
+    .brand-sub { color:#746d67 !important; font-weight:620 !important; }
+    .nav { background:rgba(18,20,23,.04) !important; border-color:rgba(18,20,23,.06) !important; }
+    .nav button.active { background:#15161a !important; color:#fff !important; box-shadow:0 10px 26px rgba(18,20,23,.16) !important; }
+    .hero-main {
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.995), rgba(252,250,247,.985) 62%, rgba(244,239,233,.96)),
+        radial-gradient(circle at 94% 0%, rgba(118,36,39,.06), transparent 38%) !important;
+      border-color:rgba(18,20,23,.075) !important;
+      box-shadow:var(--shadow) !important;
+    }
+    .hero-main:before {
+      background:linear-gradient(135deg, transparent 0%, rgba(118,36,39,.040) 46%, rgba(47,103,90,.055) 100%) !important;
+      opacity:.72 !important;
+    }
+    .hero-main:after { background:linear-gradient(90deg,#762427,#c98055) !important; opacity:.58 !important; }
+    .hero-chart-card, .card {
+      background:rgba(255,255,255,.92) !important;
+      border-color:rgba(18,20,23,.075) !important;
+      box-shadow:var(--shadow) !important;
+    }
+    .card.dark {
+      color:#fff;
+      background:
+        radial-gradient(circle at 98% 0%, rgba(182,58,53,.11), transparent 34%),
+        linear-gradient(145deg,#121417 0%,#1b1e22 100%) !important;
+      border-color:rgba(255,255,255,.08) !important;
+      box-shadow:var(--shadow2) !important;
+    }
+    .card.green {
+      color:#fff;
+      background:
+        radial-gradient(circle at 88% 4%, rgba(182,58,53,.10), transparent 30%),
+        linear-gradient(145deg,#285f53 0%,#131719 82%) !important;
+      border-color:rgba(255,255,255,.09) !important;
+      box-shadow:var(--shadow2) !important;
+    }
+    .card.orange {
+      color:#fff;
+      background:
+        linear-gradient(145deg,#7c2a2c 0%,#b63a35 58%,#c98055 100%) !important;
+      border-color:rgba(255,255,255,.12) !important;
+      box-shadow:var(--shadow2) !important;
+    }
+    .glass-pill:nth-child(2) {
+      background:linear-gradient(135deg,#15161a 0%,#201c1d 62%,#2d2020 100%) !important;
+      box-shadow:0 16px 34px rgba(35,24,22,.13) !important;
+    }
+
+    /* Lucide icon badges: replace all decorative dots/squares with clean SVG icons. */
+    .spark-dot,
+    .eyebrow:before {
+      content:"" !important;
+      position:relative !important;
+      flex:0 0 auto !important;
+      width:34px !important;
+      height:34px !important;
+      border-radius:11px !important;
+      background:rgba(182,58,53,.085) !important;
+      background-image:none !important;
+      border:1px solid rgba(182,58,53,.14) !important;
+      box-shadow:none !important;
+      transform:none !important;
+      margin:0 !important;
+      display:inline-grid !important;
+      place-items:center !important;
+    }
+    .spark-dot:before,
+    .eyebrow:before {
+      box-sizing:border-box !important;
+    }
+    .spark-dot:before,
+    .eyebrow:after {
+      content:"" !important;
+      position:absolute !important;
+      width:18px !important;
+      height:18px !important;
+      inset:7px !important;
+      background:#9b332f !important;
+      -webkit-mask:var(--icon, var(--icon-default)) center / contain no-repeat !important;
+      mask:var(--icon, var(--icon-default)) center / contain no-repeat !important;
+      border:0 !important;
+      transform:none !important;
+      border-radius:0 !important;
+      display:block !important;
+    }
+    .eyebrow { gap:10px !important; align-items:center !important; }
+    .eyebrow:before {
+      width:30px !important;
+      height:30px !important;
+      border-radius:10px !important;
+      --icon:var(--icon-landmark);
+    }
+    .eyebrow:after {
+      inset:auto !important;
+      position:absolute !important;
+      left:18px !important;
+      top:50% !important;
+      transform:translate(-50%,-50%) !important;
+      width:16px !important;
+      height:16px !important;
+      display:block !important;
+    }
+    .card.dark .spark-dot,
+    .card.green .spark-dot,
+    .card.orange .spark-dot {
+      background:rgba(255,255,255,.10) !important;
+      border-color:rgba(255,255,255,.13) !important;
+    }
+    .card.dark .spark-dot:before,
+    .card.green .spark-dot:before,
+    .card.orange .spark-dot:before {
+      background:rgba(255,255,255,.88) !important;
+    }
+    .icon-chart{--icon:var(--icon-chart)}
+    .icon-gauge{--icon:var(--icon-gauge)}
+    .icon-pie{--icon:var(--icon-pie)}
+    .icon-layout{--icon:var(--icon-layout)}
+    .icon-building{--icon:var(--icon-building)}
+    .icon-banknote{--icon:var(--icon-banknote)}
+    .icon-ruler{--icon:var(--icon-ruler)}
+    .icon-table{--icon:var(--icon-table)}
+    .icon-receipt{--icon:var(--icon-receipt)}
+    .icon-users{--icon:var(--icon-users)}
+
+    .selector-btn:before { content:none !important; display:none !important; }
+    .selector-btn:after {
+      content:"" !important;
+      right:14px !important;
+      top:50% !important;
+      width:18px !important;
+      height:18px !important;
+      border:0 !important;
+      border-radius:0 !important;
+      background:#8c3833 !important;
+      box-shadow:none !important;
+      transform:translateY(-50%) !important;
+      -webkit-mask:var(--icon-chevron) center / contain no-repeat !important;
+      mask:var(--icon-chevron) center / contain no-repeat !important;
+    }
+    .selector.open .selector-btn:after { transform:translateY(-50%) rotate(180deg) !important; background:#9b332f !important; }
+    .selector-option.active:before { content:none !important; display:none !important; }
+    .selector-option.active:after {
+      content:"" !important;
+      width:21px !important;
+      height:21px !important;
+      flex:0 0 21px !important;
+      margin-left:auto !important;
+      color:transparent !important;
+      background:#b63a35 !important;
+      -webkit-mask:var(--icon-check) center / contain no-repeat !important;
+      mask:var(--icon-check) center / contain no-repeat !important;
+      display:block !important;
+    }
+    .selector-option.active {
+      background:#fff4f1 !important;
+      border-color:rgba(182,58,53,.18) !important;
+    }
+    .selector-btn:hover { border-color:rgba(182,58,53,.26) !important; box-shadow:0 10px 24px rgba(18,20,23,.055) !important; }
+    .selector.open .selector-btn { border-color:rgba(182,58,53,.36) !important; box-shadow:0 0 0 3px rgba(182,58,53,.07), 0 12px 28px rgba(18,20,23,.075) !important; }
+    .selector-option:hover { background:#fff6f1 !important; border-color:rgba(182,58,53,.12) !important; }
+    .tabs button.active { background:#15161a !important; box-shadow:0 8px 20px rgba(18,20,23,.14) !important; }
+    .search:focus { border-color:rgba(182,58,53,.40) !important; box-shadow:0 0 0 4px rgba(182,58,53,.09) !important; }
+    .status.leased { color:#174b3d !important; background:#e4f3ec !important; }
+    .status.free { color:#762427 !important; background:#fff0ec !important; }
+
+    @media (max-width:1100px) {
+      .brand { min-width:0 !important; }
+      .brand-logo-frame, .brand-logo-img { width:160px !important; height:25px !important; }
+    }
+    @media (max-width:860px) {
+      .brand-logo-frame, .brand-logo-img { width:148px !important; height:23px !important; }
+      .spark-dot { width:32px !important; height:32px !important; border-radius:10px !important; }
+    }
+
+  </style>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+</head>
+<body>
+<script id="model-data" type="application/json">{"meta":{"title":"Промтехнопарк в Митино","subtitle":"Фактический финансовый HTML-дашборд с блоком вакантности","sourceWorkbook":"promtechnopark_mitino_financial_model_native_excel_dashboard_excel_safe_final.xlsx","generatedAt":"2026-06-22 18:12","echartsExamples":"https://echarts.apache.org/examples/en/index.html#chart-type-line","note":"Данные встроены в HTML; расчет факта идет по сданным лотам, а вакантные площади показываются отдельным блоком как денежный потенциал и доля вакантности."},"control":{"totalArea":11776.2,"rentableArea":10113.640000000001,"leasedArea":8631.28,"availableArea":1482.3600000000001,"nonRentableArea":1662.5599999999995,"occupancy":0.8534296257331683,"vat":0.22,"opexRate":3000.0,"indexation":0.07,"currentBaseMonthly":13946293.333333334,"currentBaseAnnual":167355520.0,"currentOpexMonthly":2157820.0,"currentOpexAnnual":25893840.0,"currentVatMonthly":3542904.9333333336,"currentVatAnnual":42514859.2,"currentAllInMonthly":19647018.266666666,"currentAllInAnnual":235764219.2},"leases":[{"tenant":"Рубитек","lot":"Рубитек - производство/склад","format":"Производство / склад","status":"Сдано","area":2591.78,"baseRate":17000.0,"baseMonthlyRent":3671688.3333333335,"baseAnnualRent":44060260.0,"opexMonthly":647945.0000000001,"opexAnnual":7775340.000000002,"allInMonthly":5269952.666666667,"allInAnnual":63239432.0,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"Рубитек","lot":"Рубитек - мезонин / АБК","format":"Мезонин / АБК","status":"Сдано","area":707.34,"baseRate":17000.0,"baseMonthlyRent":1002065.0,"baseAnnualRent":12024780.0,"opexMonthly":176835.0,"opexAnnual":2122020.0,"allInMonthly":1438258.0,"allInAnnual":17259096.0,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"Рубитек","lot":"Рубитек - офис","format":"Офис","status":"Сдано","area":896.87,"baseRate":28000.0,"baseMonthlyRent":2092696.6666666667,"baseAnnualRent":25112360.0,"opexMonthly":224217.5,"opexAnnual":2690610.0,"allInMonthly":2826635.2833333337,"allInAnnual":33919623.4,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"—","lot":"Офисный блок, 3 этаж","format":"Офис","status":"Доступно","area":896.94,"baseRate":28000.0,"baseMonthlyRent":2092860.0,"baseAnnualRent":25114320.0,"opexMonthly":224235.0,"opexAnnual":2690820.0,"allInMonthly":2826855.9,"allInAnnual":33922270.8,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"АБ Центрум","lot":"АБ Центрум - офис, 4 этаж","format":"Офис","status":"Сдано","area":429.79,"baseRate":28000.0,"baseMonthlyRent":1002843.3333333334,"baseAnnualRent":12034120.0,"opexMonthly":107447.5,"opexAnnual":1289370.0,"allInMonthly":1354554.816666667,"allInAnnual":16254657.799999999,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"ООО \"ИНТЭЛ\"","lot":"ООО \"ИНТЭЛ\" - производственное помещение","format":"Производство / склад","status":"Сдано","area":3067.05,"baseRate":18000.0,"baseMonthlyRent":4600575.0,"baseAnnualRent":55206900.0,"opexMonthly":766762.5,"opexAnnual":9201150.0,"allInMonthly":6548151.75,"allInAnnual":78577821.0,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"ООО \"ИНТЭЛ\"","lot":"ООО \"ИНТЭЛ\" - мезонинный блок, 4 этаж / 394,16 м²","format":"Производство / склад","status":"Сдано","area":394.16,"baseRate":18000.0,"baseMonthlyRent":591240.0,"baseAnnualRent":7094880.0,"opexMonthly":98540.0,"opexAnnual":1182480.0,"allInMonthly":841531.6,"allInAnnual":10098379.2,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"ООО \"ИНТЭЛ\"","lot":"ООО \"ИНТЭЛ\" - мезонинный блок, 4 этаж / 319,29 м²","format":"Производство / склад","status":"Сдано","area":319.29,"baseRate":18000.0,"baseMonthlyRent":478935.0,"baseAnnualRent":5747220.0,"opexMonthly":79822.50000000001,"opexAnnual":957870.0000000002,"allInMonthly":681684.15,"allInAnnual":8180209.8,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"—","lot":"Шоурум / клиентский блок","format":"Коммерция 1 этажа","status":"Доступно","area":385.12,"baseRate":29000.0,"baseMonthlyRent":930706.6666666666,"baseAnnualRent":11168480.0,"opexMonthly":96280.0,"opexAnnual":1155360.0,"allInMonthly":1252923.7333333332,"allInAnnual":15035084.799999999,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"Contour","lot":"Contour - общепит","format":"Коммерция 1 этажа","status":"Сдано","area":225.0,"baseRate":27000.0,"baseMonthlyRent":506250.0,"baseAnnualRent":6075000.0,"opexMonthly":56250.0,"opexAnnual":675000.0,"allInMonthly":686250.0,"allInAnnual":8235000.0,"occupancy":1.0,"start":"2026-10-01"},{"tenant":"—","lot":"Кафе / ресторан - остаток после Contour","format":"Коммерция 1 этажа","status":"Доступно","area":200.3,"baseRate":29000.0,"baseMonthlyRent":484058.3333333333,"baseAnnualRent":5808700.0,"opexMonthly":50075.0,"opexAnnual":600900.0,"allInMonthly":651642.6666666665,"allInAnnual":7819712.0,"occupancy":1.0,"start":"2026-10-01"}],"formats":["Коммерция 1 этажа","Мезонин / АБК","Офис","Производство / склад"],"statuses":["Доступно","Сдано"],"expenses":{"payroll":[{"role":"Администратор объекта / менеджер арендаторов","count":1.0,"grossMonthly":100000.0,"payrollMonthly":100000.0},{"role":"Инженер по эксплуатации / главный инженер объекта","count":1.0,"grossMonthly":180000.0,"payrollMonthly":180000.0},{"role":"Техник-электрик / слаботочные системы","count":1.0,"grossMonthly":120000.0,"payrollMonthly":120000.0},{"role":"Техник ОВиК / сантехника / тепловой узел","count":1.0,"grossMonthly":120000.0,"payrollMonthly":120000.0},{"role":"Рабочий по комплексному обслуживанию / хаус-мастер","count":1.0,"grossMonthly":90000.0,"payrollMonthly":90000.0}],"categories":[{"article":"Клининг МОП и территория","monthly":180000.0,"annual":2160000.0,"comment":"МОП, входные группы, уборка прилегающей территории"},{"article":"ТО инженерных систем","monthly":250000.0,"annual":3000000.0,"comment":"Вентиляция, электрика, тепло, вода, автоматика, подрядчики"},{"article":"Текущий ремонт / аварийный запас","monthly":150000.0,"annual":1800000.0,"comment":"Материалы, расходники, мелкие ремонты"},{"article":"Вывоз отходов / ТКО","monthly":120000.0,"annual":1440000.0,"comment":"Общие отходы; спецотходы арендаторов отдельно"},{"article":"Пожарная безопасность, охрана труда, поверки","monthly":50000.0,"annual":600000.0,"comment":"Журналы, проверки, поверки, СИЗ, инструктажи"},{"article":"Страхование здания","monthly":80000.0,"annual":960000.0,"comment":"Ориентир; уточняется по страховщику"},{"article":"Бухгалтерия / юристы / договорная работа","monthly":80000.0,"annual":960000.0,"comment":"Сопровождение УК, договоры, претензионная работа"},{"article":"IT / связь / ПО / канцелярия","monthly":40000.0,"annual":480000.0,"comment":"Административная часть"}],"annual":[{"metric":"ФОТ УК с начислениями","2026":2379000.0,"2027":9682530.0,"2028":10360307.099999998,"2029":11085528.597,"2030":11861515.59879},{"metric":"Прямые OPEX без ФОТ","2026":2850000.0,"2027":11599500.0,"2028":12411465.000000002,"2029":13280267.549999999,"2030":14209886.278499998},{"metric":"Текущий OPEX без резерва","2026":5229000.0,"2027":21282030.0,"2028":22771772.1,"2029":24365796.147,"2030":26071401.877289996},{"metric":"Резерв капремонта","2026":1766430.0,"2027":7189370.100000001,"2028":7692626.007000001,"2029":8231109.827490001,"2030":8807287.515414301},{"metric":"Итого расходы с резервом","2026":6995430.0,"2027":28471400.1,"2028":30464398.107,"2029":32596905.97449,"2030":34878689.39270429},{"metric":"Экспл. платежи арендаторов","2026":7585230.000000002,"2027":30340920.000000004,"2028":30340920.000000004,"2029":30340920.000000004,"2030":30340920.000000004},{"metric":"Профицит / дефицит: эксплуатация без резерва","2026":2356230.000000002,"2027":9058890.000000004,"2028":7569147.900000002,"2029":5975123.853000004,"2030":4269518.122710008},{"metric":"Профицит / дефицит: с резервом капремонта","2026":589800.0000000019,"2027":1869519.9000000022,"2028":-123478.10699999705,"2029":-2255985.974489998,"2030":-4537769.392704289},{"metric":"Покрытие расходов экспл. платежами","2026":1.0843121866704408,"2027":1.0656630827227918,"2028":0.995946806282983,"2029":0.9307914077411056,"2030":0.8698985119075755}]},"rawSheets":{"Титул":[["Промтехнопарк в Митино"],["Финансовый титульный лист: текущая заполняемость, базовая аренда, эксплуатационные платежи и НДС 22%"],["База расчета","Только строки со статусом «Сдано» в листе «Реестр аренды»","","","","","","","","","Обновлено","2026-06-22"],["Текущая заполняемость","","","Аренда по базовой ставке","","","Оборот: аренда + OPEX + НДС","","","Методика расчета"],["85.3%","","","13 946 293","","","19 647 018","","","База: только строки «Сдано»"],["от арендопригодной площади","","","руб./мес без НДС","","","руб./мес с НДС 22%","","","Аренда = площадь × базовая ставка"],["8 631","","","167 355 520","","","235 764 219","","","OPEX = площадь × 3 000 руб./м²/год"],["сдано, м²","","","руб./год без НДС","","","руб./год с НДС 22%","","","НДС 22% начисляется сверху"],["10 114","","","19 389","","","40.9%","","","Источники: «Реестр аренды», «Контроль»"],["Текущий оборот при фактической заполняемости"],["Показатель","Год, руб.","Месяц, руб.","Комментарий"],["Базовая аренда без НДС","167 355 520","13 946 293","Площадь × базовая ставка, только сданные лоты"],["Эксплуатационные платежи без НДС","25 893 840","2 157 820","3 000 руб./м²/год × сданная площадь"],["Итого без НДС","193 249 360","16 104 113","Базовая аренда + эксплуатационные платежи"],["НДС 22%","42 514 859","3 542 905","22% от суммы аренды и эксплуатационных платежей"],["Итого оборот с НДС","235 764 219","19 647 018","Базовая аренда + OPEX + НДС"],["Годовой план базового сценария"],["Показатель","2 026","2 027","2 028","2 029","2 030","","Сценарий","Дисконт","Аренда 2027","Итого 2027 без НДС","Аренда 2030","Итого 2030 без НДС"],["Арендная плата без НДС","52 361 755","213 112 343","228 030 207","243 992 321","261 071 784","","Базовый","0.0%","213 112 343","243 453 263","261 071 784","291 412 704"],["Эксплуатационные платежи без НДС","7 585 230","30 340 920","30 340 920","30 340 920","30 340 920","","Скидка 5%","5.0%","210 970 938","241 311 858","258 448 471","288 789 391"],["Итого без НДС","59 946 985","243 453 263","258 371 127","274 333 241","291 412 704","","Скидка 10%","10.0%","208 829 533","239 170 453","255 825 157","286 166 077"],["НДС 22%","13 188 337","53 559 718","56 841 648","60 353 313","64 110 795"],["Итого с НДС","73 135 322","297 012 981","315 212 775","334 686 554","355 523 499"],["Структура площадей"],["Контур","Площадь, м²","Доля от общей площади","Комментарий","","Формат","Площадь, м²","Доля в арендопригодной площади","Комментарий"],["Сдано","8 631","0.7329","Действующие арендаторы / подписанные сделки","","Производство / склад","6 372","0.6301","Сумма по реестру"],["Доступно","1 482","0.1259","Свободные лоты, учитываются отдельно от текущей заполняемости","","Мезонин / АБК","707.34","0.0699","Сумма по реестру"],["Неарендопригодная площадь","1 663","0.1412","Общая площадь − арендопригодная","","Офис","2 224","0.2199","Сумма по реестру"],["Итого","11 776","1","Контроль суммы = 100%","","Коммерция 1 этажа","810.42","0.0801","Сумма по реестру"],["","","","","","Итого","10 114","100.0%","Контроль = арендопригодная площадь"],["Внутренний нативный Excel-дашборд"],["Дашборд размещен внутри книги: нативные Excel-графики и срезы/фильтры пересчитываются вместе с моделью.","","","","▶ Откройте лист «Дашборд»","","","","HTML/ECharts больше не является основным дашбордом: все ключевые графики находятся внутри Excel."]],"Расходы":[["Расходная часть объекта\nПромтехнопарк в Митино • OPEX УК + резерв на капитальный ремонт • без учета коммунальных платежей"],["1. Исходные параметры","","","","2. Контрольные показатели 2027"],["Показатель","Значение","Ед. изм.","Комментарий","Текущий OPEX без резерва","21 282 030","руб./год"],["Общая площадь здания","11 776","м²","База для резерва капитального ремонта","Резерв капремонта","7 189 370","руб./год"],["Арендопригодная площадь","10 114","м²","Связано с листом «Базовый»","Итого расходы с резервом","28 471 400","руб./год"],["Старт расходной части","46 296","дата","Расходы считаются с октября 2026","Экспл. платежи арендаторов","30 340 920","руб./год"],["Индексация расходов","7.0%","%/год","С 2028 года; 2026–2027 - базовый уровень","Профицит / дефицит после резерва","1 869 520","руб./год"],["Страховые взносы работодателя","30.0%","%","Ориентир для модели: 30% от gross ФОТ","Покрытие расходов экспл. платежом","1.0657x","x"],["Резерв капремонта","50","руб./м²/мес.","Внутренний резерв собственника, не коммунальный платеж"],["Эксплуатационный платеж арендаторов","3 000","руб./м²/год","Поступления от арендаторов по модели доходов"],["НДС сверху","0.22","%","Для сопоставления с доходной частью"],["3. ФОТ управляющей компании"],["Должность","Кол-во","Gross / мес., руб.","ФОТ gross / мес.","Взносы 30% / мес.","Полная стоимость / мес.","Полная стоимость / год","Комментарий"],["Администратор объекта / менеджер арендаторов","1","100 000","100 000","30 000","130 000","1 560 000","Коммуникации с арендаторами, заявки, пропуска, документы"],["Инженер по эксплуатации / главный инженер объекта","1","180 000","180 000","54 000","234 000","2 808 000","Инженерные системы, ППР, подрядчики, аварийные заявки"],["Техник-электрик / слаботочные системы","1","120 000","120 000","36 000","156 000","1 872 000","Электрика, освещение, СКУД/слаботочка, мелкие аварии"],["Техник ОВиК / сантехника / тепловой узел","1","120 000","120 000","36 000","156 000","1 872 000","Отопление, вентиляция, вода, канализация, узлы учета"],["Рабочий по комплексному обслуживанию / хаус-мастер","1","90 000","90 000","27 000","117 000","1 404 000","Мелкий ремонт, территория, оперативные задачи"],["Итого ФОТ УК","5","610 000","610 000","183 000","793 000","9 516 000","Охрана не включена по заданию; функции доступа у администратора"],["4. Текущие операционные расходы объекта без ФОТ и без охраны","","","","","5. Резерв на капитальный ремонт"],["Статья","Расход / мес., руб.","Расход / год, руб.","Комментарий","","Статья","Расчет","Расход / год, руб.","Комментарий"],["Клининг МОП и территория","180 000","2 160 000","МОП, входные группы, уборка прилегающей территории","","Контрольный московский ориентир МКД","4 611 089","4 611 089","Не прямая норма для коммерческого здания; только ориентир"],["ТО инженерных систем","250 000","3 000 000","Вентиляция, электрика, тепло, вода, автоматика, подрядчики","","Рекомендуемый резерв модели","7 065 720","7 065 720","50 руб./м²/мес. как внутренний резерв собственника"],["Текущий ремонт / аварийный запас","150 000","1 800 000","Материалы, расходники, мелкие ремонты","","Итого резерв капремонта","7 065 720","7 065 720","Используется в годовом и месячном планах"],["Вывоз отходов / ТКО","120 000","1 440 000","Общие отходы; спецотходы арендаторов отдельно"],["Пожарная безопасность, охрана труда, поверки","50 000","600 000","Журналы, проверки, поверки, СИЗ, инструктажи"],["Страхование здания","80 000","960 000","Ориентир; уточняется по страховщику"],["Бухгалтерия / юристы / договорная работа","80 000","960 000","Сопровождение УК, договоры, претензионная работа"],["IT / связь / ПО / канцелярия","40 000","480 000","Административная часть"],["Итого прямые OPEX без ФОТ","950 000","11 400 000","Охрана исключена по заданию"],["6. Годовой план расходов и сопоставление с эксплуатационными платежами","","","","","","","7. Методические примечания"],["Показатель","2 026","2 027","2 028","2 029","2 030","","Коммунальные платежи","Не включены в расходную часть как расход собственника: электроэнергия, вода, тепло, водоотведение считаются переменными/возмещаемыми платежами по фактическому потреблению."],["ФОТ УК с начислениями","2 379 000","9 682 530","10 360 307","11 085 529","11 861 516","","Охрана","Не включена по заданию. Администратор отвечает за коммуникации, пропускной режим/заявки и координацию доступа."],["Прямые OPEX без ФОТ","2 850 000","11 599 500","12 411 465","13 280 268","14 209 886","","Резерв капремонта","Отдельный управленческий резерв собственника. Не смешивается с текущими коммунальными платежами и показывается отдельно от текущего OPEX."],["Текущий OPEX без резерва","5 229 000","21 282 030","22 771 772","24 365 796","26 071 402","","Индексация","2026–2027: базовый уровень; с 2028 года расходы индексируются на 7% ежегодно."],["Резерв капремонта","1 766 430","7 189 370","7 692 626","8 231 110","8 807 288"],["Итого расходы с резервом","6 995 430","28 471 400","30 464 398","32 596 906","34 878 689"],["Экспл. платежи арендаторов","7 585 230","30 340 920","30 340 920","30 340 920","30 340 920"],["Профицит / дефицит: эксплуатация без резерва","2 356 230","9 058 890","7 569 148","5 975 124","4 269 518"],["Профицит / дефицит: с резервом капремонта","589 800","1 869 520","-123 478","-2 255 986","-4 537 769"],["Покрытие расходов экспл. платежами","1.0843x","1.0657x","0.9959x","0.9308x","0.8699x"],["8. Месячный план расходов"],["Месяц","ФОТ УК с начислениями","Прямые OPEX без ФОТ","Резерв капремонта","Итого расходы","Экспл. платежи арендаторов","Профицит / дефицит","Индекс расходов"],["2026-10-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2026-11-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2026-12-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-01-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-02-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-03-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-04-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-05-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-06-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-07-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-08-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-09-01","793 000","950 000","588 810","2 331 810","2 528 410","196 600","1.0000x"],["2027-10-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2027-11-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2027-12-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-01-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-02-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-03-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-04-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-05-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-06-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-07-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-08-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-09-01","848 510","1 016 500","630 027","2 495 037","2 528 410","33 373","1.0700x"],["2028-10-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2028-11-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2028-12-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-01-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-02-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-03-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-04-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-05-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-06-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-07-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-08-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-09-01","907 906","1 087 655","674 129","2 669 689","2 528 410","-141 279","1.1449x"],["2029-10-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2029-11-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2029-12-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-01-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-02-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-03-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-04-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-05-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-06-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-07-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-08-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-09-01","971 459","1 163 791","721 318","2 856 568","2 528 410","-328 158","1.2250x"],["2030-10-01","1 039 461","1 245 256","771 810","3 056 527","2 528 410","-528 117","1.3108x"],["2030-11-01","1 039 461","1 245 256","771 810","3 056 527","2 528 410","-528 117","1.3108x"],["2030-12-01","1 039 461","1 245 256","771 810","3 056 527","2 528 410","-528 117","1.3108x"],["9. Источники и ограничения допущений"],["Параметр","Источник / ориентир","Комментарий"],["Резерв капремонта","https://www.mos.ru/upload/documents/docs/4808/2905-PPfvcx.pdf","Использован как контрольный ориентир по МКД Москвы 2026; для коммерческого здания принят управленческий резерв 50 руб./м²/мес."],["ФОТ персонала УК","Открытые вакансии Москвы / рыночные ориентиры 2026","Заложены gross-зарплаты для 5 штатных позиций; значения являются расчетными допущениями модели."],["Коммунальные платежи","Договорная логика аренды","Не включены в расходы собственника: требуют тарифов/объемов и считаются переменными/транзитными платежами."]],"Реестр аренды":[["Реестр аренды и источники обновления"],["Источник: данные пользователя из сообщения от 22.06.2026. Даты начала оплаты сохранены из исходной модели: 01.10.2026."],["Арендатор","Лот","Формат","Статус","Площадь, м²","Базовая ставка, руб./м²/год","Ставка в базовом сценарии","Начало оплаты","Занятость","Месячная аренда, руб.","Годовая база, руб.","НДС","Экспл. платеж, руб./год","Комментарий"],["Рубитек","Рубитек - производство/склад","Производство / склад","Сдано","2 592","17 000","17 000","2026-10-01","100.0%","3 671 688","44 060 260","22.0%","7 775 340"],["Рубитек","Рубитек - мезонин / АБК","Мезонин / АБК","Сдано","707.34","17 000","17 000","2026-10-01","100.0%","1 002 065","12 024 780","22.0%","2 122 020"],["Рубитек","Рубитек - офис","Офис","Сдано","896.87","28 000","28 000","2026-10-01","100.0%","2 092 697","25 112 360","22.0%","2 690 610"],["—","Офисный блок, 3 этаж","Офис","Доступно","896.94","28 000","28 000","2026-10-01","100.0%","2 092 860","25 114 320","22.0%","2 690 820"],["АБ Центрум","АБ Центрум - офис, 4 этаж","Офис","Сдано","429.79","28 000","28 000","2026-10-01","100.0%","1 002 843","12 034 120","22.0%","1 289 370","Новая сделка: 429,79 м² по 28 000 руб./м²/год."],["ООО \"ИНТЭЛ\"","ООО \"ИНТЭЛ\" - производственное помещение","Производство / склад","Сдано","3 067","18 000","18 000","2026-10-01","100.0%","4 600 575","55 206 900","22.0%","9 201 150","Новая сделка: 3 067,05 м² по 18 000 руб./м²/год."],["ООО \"ИНТЭЛ\"","ООО \"ИНТЭЛ\" - мезонинный блок, 4 этаж / 394,16 м²","Производство / склад","Сдано","394.16","18 000","18 000","2026-10-01","100.0%","591 240","7 094 880","22.0%","1 182 480","Новая сделка: 394,16 м² по 18 000 руб./м²/год."],["ООО \"ИНТЭЛ\"","ООО \"ИНТЭЛ\" - мезонинный блок, 4 этаж / 319,29 м²","Производство / склад","Сдано","319.29","18 000","18 000","2026-10-01","100.0%","478 935","5 747 220","22.0%","957 870","Новая сделка: 319,29 м² по 18 000 руб./м²/год."],["—","Шоурум / клиентский блок","Коммерция 1 этажа","Доступно","385.12","29 000","29 000","2026-10-01","100.0%","930 707","11 168 480","22.0%","1 155 360"],["Contour","Contour - общепит","Коммерция 1 этажа","Сдано","225","27 000","27 000","2026-10-01","100.0%","506 250","6 075 000","22.0%","675 000","Новая сделка: 225 м² из 425,3 м² по 27 000 руб./м²/год, без OPEX и НДС."],["—","Кафе / ресторан - остаток после Contour","Коммерция 1 этажа","Доступно","200.3","29 000","29 000","2026-10-01","100.0%","484 058","5 808 700","22.0%","600 900","Остаток общепита: 425,3 - 225 = 200,3 м²; ставка сохранена из исходной модели."],["Итого","","","","10 114","","","","","17 453 918","209 447 020","","30 340 920"]],"Контроль":[["Контроль модели и единые предпосылки"],["Параметр","Значение","Ед. изм.","Источник / комментарий"],["Режим расчета","Факт по сданным лотам","","Сценарии и скидки удалены из HTML-дашборда"],["Общая площадь здания","11 776","м²","Исходная модель / титульный лист"],["Арендопригодная площадь","10 114","м²","Формула: сумма площадей реестра аренды"],["Индексация доходов и расходов","7.0%","%/год","Единая предпосылка модели"],["Эксплуатационный платеж арендаторов","3 000","руб./м²/год","Единая предпосылка модели"],["НДС сверху","22.0%","%","Единая предпосылка модели"],["Старт оплаты / расходов","2026-10-01","дата","Сохранено из исходной модели"],["Резерв капремонта","50","руб./м²/мес.","Управленческий резерв собственника"],["Контрольный ориентир МКД","32.63","руб./м²/мес.","Вынесено из формулы Расходы!G30"],["Страховые взносы работодателя","30.0%","%","Исходная модель расходов"],["Сдано","8 631","м²","Формула: реестр аренды"],["Доступно","1 482","м²","Формула: реестр аренды"],["Неарендопригодная площадь","1 663","м²","Формула: общая − арендопригодная"],["Контроль качества","Статус","Проверка","Комментарий"],["Дубли лотов в реестре","OK","COUNTIF","Должно быть OK"],["Площадь реестра = арендопригодная","OK","ABS","Допуск 0,01 м²"],["Контур площадей = общая площадь","OK","ABS","Сдано + доступно + неарендопригодная"],["Заполнены ключевые поля реестра","OK","COUNTBLANK","Арендатор/лот/формат/статус/площадь/ставка/дата/занятость"],["Файл очищен от битых Table-имен","OK","XML","Проверено при экспорте"]],"Дашборд":[["HTML-дашборд фактического расчета"],["Фильтры управления"],["Статус лота","","Сдано"],["Формат","","Все"],["Ключевые показатели фактической сдачи"],["Заполняемость","","Сданная площадь, м²","","Аренда, руб./мес без НДС","","Аренда, руб./год без НДС","","Оборот всё включено, руб./мес","","Оборот всё включено, руб./год"],["85.3%","","8 631","","13 946 293","","167 355 520","","19 647 018","","235 764 219"],["Детализация текущего фактического оборота"],["Показатель","Год, руб.","Месяц, руб."],["Базовая аренда без НДС","167 355 520","13 946 293"],["Эксплуатационные платежи без НДС","25 893 840","2 157 820"],["Итого без НДС","193 249 360","16 104 113"],["НДС 22%","42 514 859","3 542 905"],["Итого с НДС","235 764 219","19 647 018"],["Контур площадей"],["Сдано","8 631","м²"],["Доступно","1 482","м²"],["Неарендопригодная","1 663","м²"],["Методика","Факт считается только по лотам со статусом «Сдано». Доступные лоты не формируют фактическую выручку. Оборот «всё включено» = базовая аренда + эксплуатационные платежи + НДС 22%."],[],["Блок вакантности"],["Вакантность","14,7%","от арендопригодной площади"],["Вакантная площадь","1 482","м²"],["Потенциал базовой аренды вакантных","3 507 625","руб./мес без НДС"],["Потенциал всё включено вакантных","4 731 422","руб./мес с НДС"],["Потенциал всё включено вакантных","56 777 068","руб./год с НДС"],["Методика вакантности","Лоты со статусом «Доступно» не входят в факт выручки, но отображаются как денежный потенциал по ставкам модели."]],"Вакантность":[["Вакантность и денежный потенциал несданных площадей"],["Показатель","Значение","Ед. изм.","Комментарий"],["Вакантная площадь","1 482","м²","Сумма лотов со статусом «Доступно»"],["Вакантность","14,7%","% от арендопригодной площади","Доступно / арендопригодная площадь"],["Количество вакантных лотов","3","лот(ов)","Офисный блок, шоурум, остаток кафе/ресторана"],["Потенциал базовой аренды","3 507 625","руб./мес без НДС","Площадь × ставка / 12"],["Потенциал базовой аренды","42 091 500","руб./год без НДС","Текущий месяц × 12"],["Потенциал OPEX","370 590","руб./мес без НДС","Площадь × 3 000 / 12"],["НДС на потенциальный оборот","853 207","руб./мес","22% сверху на аренду + OPEX"],["Потенциал всё включено","4 731 422","руб./мес с НДС","Аренда + OPEX + НДС"],["Потенциал всё включено","56 777 068","руб./год с НДС","Текущий месяц × 12"],["Доля вакантных денег в полном потенциале","19,4%","%","Потенциал вакантных / факт + потенциал вакантных"],[],["Разбивка по вакантным лотам"],["Лот","Формат","Площадь, м²","Ставка, руб./м²/год","Аренда / мес","OPEX / мес","НДС / мес","Всё включено / мес","Аренда / год","Всё включено / год","Доля в вакантном обороте"],["Офисный блок, 3 этаж","Офис","896,94","28 000","2 092 860","224 235","509 761","2 826 856","25 114 320","33 922 271","59,7%"],["Шоурум / клиентский блок","Коммерция 1 этажа","385,12","29 000","930 707","96 280","225 937","1 252 924","11 168 480","15 035 085","26,5%"],["Кафе / ресторан - остаток после Contour","Коммерция 1 этажа","200,30","29 000","484 058","50 075","117 509","651 643","5 808 700","7 819 712","13,8%"],[],["Разбивка по форматам"],["Формат","Лотов","Площадь, м²","Доля площади","Аренда / мес","Всё включено / мес","Всё включено / год","Доля денег"],["Офис","1","896,94","60,5%","2 092 860","2 826 856","33 922 271","59,7%"],["Коммерция 1 этажа","2","585,42","39,5%","1 414 765","1 904 566","22 854 797","40,3%"]]},"years":[2026,2027,2028,2029,2030],"fact":{"mode":"Фактический расчет","start":"2026-10-01","months":[{"date":"2026-10-01","label":"окт 26"},{"date":"2026-11-01","label":"ноя 26"},{"date":"2026-12-01","label":"дек 26"},{"date":"2027-01-01","label":"янв 27"},{"date":"2027-02-01","label":"фев 27"},{"date":"2027-03-01","label":"мар 27"},{"date":"2027-04-01","label":"апр 27"},{"date":"2027-05-01","label":"май 27"},{"date":"2027-06-01","label":"июн 27"},{"date":"2027-07-01","label":"июл 27"},{"date":"2027-08-01","label":"авг 27"},{"date":"2027-09-01","label":"сен 27"},{"date":"2027-10-01","label":"окт 27"},{"date":"2027-11-01","label":"ноя 27"},{"date":"2027-12-01","label":"дек 27"},{"date":"2028-01-01","label":"янв 28"},{"date":"2028-02-01","label":"фев 28"},{"date":"2028-03-01","label":"мар 28"},{"date":"2028-04-01","label":"апр 28"},{"date":"2028-05-01","label":"май 28"},{"date":"2028-06-01","label":"июн 28"},{"date":"2028-07-01","label":"июл 28"},{"date":"2028-08-01","label":"авг 28"},{"date":"2028-09-01","label":"сен 28"},{"date":"2028-10-01","label":"окт 28"},{"date":"2028-11-01","label":"ноя 28"},{"date":"2028-12-01","label":"дек 28"},{"date":"2029-01-01","label":"янв 29"},{"date":"2029-02-01","label":"фев 29"},{"date":"2029-03-01","label":"мар 29"},{"date":"2029-04-01","label":"апр 29"},{"date":"2029-05-01","label":"май 29"},{"date":"2029-06-01","label":"июн 29"},{"date":"2029-07-01","label":"июл 29"},{"date":"2029-08-01","label":"авг 29"},{"date":"2029-09-01","label":"сен 29"},{"date":"2029-10-01","label":"окт 29"},{"date":"2029-11-01","label":"ноя 29"},{"date":"2029-12-01","label":"дек 29"},{"date":"2030-01-01","label":"янв 30"},{"date":"2030-02-01","label":"фев 30"},{"date":"2030-03-01","label":"мар 30"},{"date":"2030-04-01","label":"апр 30"},{"date":"2030-05-01","label":"май 30"},{"date":"2030-06-01","label":"июн 30"},{"date":"2030-07-01","label":"июл 30"},{"date":"2030-08-01","label":"авг 30"},{"date":"2030-09-01","label":"сен 30"},{"date":"2030-10-01","label":"окт 30"},{"date":"2030-11-01","label":"ноя 30"},{"date":"2030-12-01","label":"дек 30"}],"years":[2026,2027,2028,2029,2030],"lots":[{"tenant":"Рубитек","lot":"Рубитек - производство/склад","format":"Производство / склад","status":"Сдано","area":2591.78,"baseRate":17000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":3671688.3333333335,"baseMonthlyOpex":647945.0000000001,"marketMonthlyRent":3671688.3333333335,"marketMonthlyOpex":647945.0000000001,"marketMonthlyAllIn":5269952.666666667,"marketAnnualRent":44060260.0,"marketAnnualOpex":7775340.000000002,"marketAnnualAllIn":63239432.0},{"tenant":"Рубитек","lot":"Рубитек - мезонин / АБК","format":"Мезонин / АБК","status":"Сдано","area":707.34,"baseRate":17000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":1002065.0,"baseMonthlyOpex":176835.0,"marketMonthlyRent":1002065.0,"marketMonthlyOpex":176835.0,"marketMonthlyAllIn":1438258.0,"marketAnnualRent":12024780.0,"marketAnnualOpex":2122020.0,"marketAnnualAllIn":17259096.0},{"tenant":"Рубитек","lot":"Рубитек - офис","format":"Офис","status":"Сдано","area":896.87,"baseRate":28000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":2092696.6666666667,"baseMonthlyOpex":224217.5,"marketMonthlyRent":2092696.6666666667,"marketMonthlyOpex":224217.5,"marketMonthlyAllIn":2826635.2833333337,"marketAnnualRent":25112360.0,"marketAnnualOpex":2690610.0,"marketAnnualAllIn":33919623.400000006},{"tenant":"—","lot":"Офисный блок, 3 этаж","format":"Офис","status":"Доступно","area":896.94,"baseRate":28000.0,"start":"2026-10-01","isLeased":false,"baseMonthlyRent":0.0,"baseMonthlyOpex":0.0,"marketMonthlyRent":2092860.0,"marketMonthlyOpex":224235.0,"marketMonthlyAllIn":2826855.9,"marketAnnualRent":25114320.0,"marketAnnualOpex":2690820.0,"marketAnnualAllIn":33922270.8},{"tenant":"АБ Центрум","lot":"АБ Центрум - офис, 4 этаж","format":"Офис","status":"Сдано","area":429.79,"baseRate":28000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":1002843.3333333334,"baseMonthlyOpex":107447.5,"marketMonthlyRent":1002843.3333333334,"marketMonthlyOpex":107447.5,"marketMonthlyAllIn":1354554.816666667,"marketAnnualRent":12034120.0,"marketAnnualOpex":1289370.0,"marketAnnualAllIn":16254657.800000003},{"tenant":"ООО \"ИНТЭЛ\"","lot":"ООО \"ИНТЭЛ\" - производственное помещение","format":"Производство / склад","status":"Сдано","area":3067.05,"baseRate":18000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":4600575.0,"baseMonthlyOpex":766762.5,"marketMonthlyRent":4600575.0,"marketMonthlyOpex":766762.5,"marketMonthlyAllIn":6548151.75,"marketAnnualRent":55206900.0,"marketAnnualOpex":9201150.0,"marketAnnualAllIn":78577821.0},{"tenant":"ООО \"ИНТЭЛ\"","lot":"ООО \"ИНТЭЛ\" - мезонинный блок, 4 этаж / 394,16 м²","format":"Производство / склад","status":"Сдано","area":394.16,"baseRate":18000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":591240.0,"baseMonthlyOpex":98540.0,"marketMonthlyRent":591240.0,"marketMonthlyOpex":98540.0,"marketMonthlyAllIn":841531.6,"marketAnnualRent":7094880.0,"marketAnnualOpex":1182480.0,"marketAnnualAllIn":10098379.2},{"tenant":"ООО \"ИНТЭЛ\"","lot":"ООО \"ИНТЭЛ\" - мезонинный блок, 4 этаж / 319,29 м²","format":"Производство / склад","status":"Сдано","area":319.29,"baseRate":18000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":478935.0,"baseMonthlyOpex":79822.50000000001,"marketMonthlyRent":478935.0,"marketMonthlyOpex":79822.50000000001,"marketMonthlyAllIn":681684.15,"marketAnnualRent":5747220.0,"marketAnnualOpex":957870.0000000002,"marketAnnualAllIn":8180209.800000001},{"tenant":"—","lot":"Шоурум / клиентский блок","format":"Коммерция 1 этажа","status":"Доступно","area":385.12,"baseRate":29000.0,"start":"2026-10-01","isLeased":false,"baseMonthlyRent":0.0,"baseMonthlyOpex":0.0,"marketMonthlyRent":930706.6666666666,"marketMonthlyOpex":96280.0,"marketMonthlyAllIn":1252923.7333333332,"marketAnnualRent":11168480.0,"marketAnnualOpex":1155360.0,"marketAnnualAllIn":15035084.799999997},{"tenant":"Contour","lot":"Contour - общепит","format":"Коммерция 1 этажа","status":"Сдано","area":225.0,"baseRate":27000.0,"start":"2026-10-01","isLeased":true,"baseMonthlyRent":506250.0,"baseMonthlyOpex":56250.0,"marketMonthlyRent":506250.0,"marketMonthlyOpex":56250.0,"marketMonthlyAllIn":686250.0,"marketAnnualRent":6075000.0,"marketAnnualOpex":675000.0,"marketAnnualAllIn":8235000.0},{"tenant":"—","lot":"Кафе / ресторан - остаток после Contour","format":"Коммерция 1 этажа","status":"Доступно","area":200.3,"baseRate":29000.0,"start":"2026-10-01","isLeased":false,"baseMonthlyRent":0.0,"baseMonthlyOpex":0.0,"marketMonthlyRent":484058.3333333333,"marketMonthlyOpex":50075.0,"marketMonthlyAllIn":651642.6666666665,"marketAnnualRent":5808700.0,"marketAnnualOpex":600900.0,"marketAnnualAllIn":7819711.999999998}],"assumptions":{"indexation":0.07,"opexRate":3000.0,"vat":0.22,"basis":"Факт выручки формируют только лоты со статусом «Сдано». Лоты «Доступно» не попадают в факт, но считаются в блоке вакантности как потенциал по ставкам модели."}},"vacancy":{"basis":"Вакантность и денежный потенциал считаются по лотам со статусом «Доступно». Это не факт выручки, а текущий рыночный потенциал при сдаче по ставкам модели.","summary":{"vacantLots":3,"vacantArea":1482.3600000000001,"leasedArea":8631.28,"rentableArea":10113.640000000001,"vacancyRate":0.14657037426683173,"occupancyRate":0.8534296257331683,"monthlyRent":3507625.0,"monthlyOpex":370590.0,"monthlyVat":853207.3,"monthlyAllIn":4731422.3,"annualRent":42091500.0,"annualOpex":4447080.0,"annualVat":10238487.600000001,"annualAllIn":56777067.599999994,"factMonthlyAllIn":19647018.266666666,"fullMarketMonthlyAllIn":24378440.566666666,"vacancyMoneyShareOfFullPotential":0.19408223783064318},"byFormat":[{"format":"Офис","area":896.94,"lots":1,"monthlyRent":2092860.0,"monthlyOpex":224235.0,"monthlyVat":509760.9,"monthlyAllIn":2826855.9,"annualRent":25114320.0,"annualAllIn":33922270.8,"areaShare":0.6050756901157613,"moneyShare":0.5974642973636067},{"format":"Коммерция 1 этажа","area":585.4200000000001,"lots":2,"monthlyRent":1414765.0,"monthlyOpex":146355.0,"monthlyVat":343446.4,"monthlyAllIn":1904566.4,"annualRent":16977180.0,"annualAllIn":22854796.799999997,"areaShare":0.39492430988423866,"moneyShare":0.40253570263639327}],"lots":[{"tenant":"—","lot":"Офисный блок, 3 этаж","format":"Офис","status":"Доступно","area":896.94,"baseRate":28000.0,"start":"2026-10-01","isLeased":false,"baseMonthlyRent":0.0,"baseMonthlyOpex":0.0,"marketMonthlyRent":2092860.0,"marketMonthlyOpex":224235.0,"marketMonthlyAllIn":2826855.9,"marketAnnualRent":25114320.0,"marketAnnualOpex":2690820.0,"marketAnnualAllIn":33922270.8,"vacancyShareArea":0.6050756901157613,"vacancyShareMoney":0.5974642973636067,"marketMonthlyVat":509760.9},{"tenant":"—","lot":"Шоурум / клиентский блок","format":"Коммерция 1 этажа","status":"Доступно","area":385.12,"baseRate":29000.0,"start":"2026-10-01","isLeased":false,"baseMonthlyRent":0.0,"baseMonthlyOpex":0.0,"marketMonthlyRent":930706.6666666666,"marketMonthlyOpex":96280.0,"marketMonthlyAllIn":1252923.7333333334,"marketAnnualRent":11168480.0,"marketAnnualOpex":1155360.0,"marketAnnualAllIn":15035084.8,"vacancyShareArea":0.2598019374510915,"vacancyShareMoney":0.2648091110644115,"marketMonthlyVat":225937.06666666665},{"tenant":"—","lot":"Кафе / ресторан - остаток после Contour","format":"Коммерция 1 этажа","status":"Доступно","area":200.3,"baseRate":29000.0,"start":"2026-10-01","isLeased":false,"baseMonthlyRent":0.0,"baseMonthlyOpex":0.0,"marketMonthlyRent":484058.3333333333,"marketMonthlyOpex":50075.0,"marketMonthlyAllIn":651642.6666666665,"marketAnnualRent":5808700.0,"marketAnnualOpex":600900.0,"marketAnnualAllIn":7819711.999999998,"vacancyShareArea":0.13512237243314715,"vacancyShareMoney":0.13772659157198175,"marketMonthlyVat":117509.33333333331}]}}</script>
+<div class="wrap">
+<header class="topbar">
+<div class="brand">
+  <div class="brand-logo-frame" aria-label="ABCENTRUM">
+    <img class="brand-logo-img" src="assets/abcentrum-logo.png" alt="ABCENTRUM" loading="eager" decoding="async" />
+  </div>
+  <div class="brand-copy"><div class="brand-title">Промтехнопарк Митино</div><div class="brand-sub">факт · вакантность · денежный потенциал</div></div>
+</div>
+<nav class="nav" id="nav">
+<button class="active" data-section="overview">Главная</button>
+<button data-section="vacancy">Вакантность</button>
+<button data-section="lots">Арендаторы</button>
+
+<button data-section="expenses">Расходы</button>
+<button data-section="tables">Все таблицы</button>
+</nav>
+<div class="stamp" id="stamp">Данные встроены</div>
+</header>
+<section class="hero">
+<div class="hero-main">
+<div class="hero-content">
+<div class="eyebrow">Факт · вакантность · потенциал несданных площадей · НДС 22%</div>
+<h1>Финансовый обзор объекта</h1>
+<div class="hero-text">Факт считается по сданным лотам. Вакантные помещения вынесены отдельно: площадь, процент вакантности и денежный потенциал несданных площадей без смешивания с фактической выручкой.</div>
+<div class="hero-metrics">
+<div class="glass-pill"><small>Базовая аренда / мес</small><strong id="heroRent">—</strong></div>
+<div class="glass-pill"><small>Оборот всё включено / мес</small><strong id="heroAllIn">—</strong></div>
+<div class="glass-pill"><small>Заполняемость</small><strong id="heroOcc">—</strong></div>
+<div class="glass-pill"><small>Вакантность</small><strong id="heroVacancy">—</strong></div>
+</div>
+</div>
+</div>
+<div class="hero-chart-card">
+<div class="selector-panel" id="filters"></div>
+<div class="chart-hero" id="heroTrend"></div>
+</div>
+</section>
+<div class="noecharts" id="noecharts">Библиотека ECharts не загрузилась. Подключите интернет или откройте файл в среде с доступом к CDN, чтобы увидеть интерактивные графики.</div>
+<main>
+<section class="section active" id="overview">
+<div class="grid kpis">
+<div class="card kpi dark"><div class="kpi-label">Площадь по фильтру</div><div class="kpi-value" id="kpiArea">—</div><div class="kpi-hint" id="kpiAreaSub">—</div><div class="mini" id="sparkArea"></div></div>
+<div class="card kpi"><div class="kpi-label">Аренда без НДС / мес</div><div class="kpi-value" id="kpiRentM">—</div><div class="kpi-hint">только базовая ставка</div><div class="mini" id="sparkRent"></div></div>
+<div class="card kpi orange"><div class="kpi-label">Аренда без НДС / год</div><div class="kpi-value" id="kpiRentY">—</div><div class="kpi-hint">без OPEX и НДС</div><div class="mini" id="sparkRentY"></div></div>
+<div class="card kpi green"><div class="kpi-label">OPEX / мес</div><div class="kpi-value" id="kpiOpex">—</div><div class="kpi-hint">эксплуатационные платежи</div><div class="mini" id="sparkOpex"></div></div>
+<div class="card kpi"><div class="kpi-label">НДС 22% / мес</div><div class="kpi-value" id="kpiVat">—</div><div class="kpi-hint">начисляется сверху</div><div class="mini" id="sparkVat"></div></div>
+<div class="card kpi dark"><div class="kpi-label">Всё включено / год</div><div class="kpi-value" id="kpiAllY">—</div><div class="kpi-hint">аренда + OPEX + НДС</div><div class="mini" id="sparkAll"></div></div>
+<div class="card kpi"><div class="kpi-label">Вакантность</div><div class="kpi-value" id="kpiVacancyRate">—</div><div class="kpi-hint" id="kpiVacancySub">несданная доля</div><div class="mini" id="sparkVacancyRate"></div></div>
+<div class="card kpi orange"><div class="kpi-label">Вакантная аренда / мес</div><div class="kpi-value" id="kpiVacancyRentM">—</div><div class="kpi-hint">потенциал без НДС</div><div class="mini" id="sparkVacancyRent"></div></div>
+<div class="card kpi dark"><div class="kpi-label">Вакантный оборот / год</div><div class="kpi-value" id="kpiVacancyAllY">—</div><div class="kpi-hint">потенциал с OPEX и НДС</div><div class="mini" id="sparkVacancyAll"></div></div>
+</div>
+<div class="grid cols-12">
+<div class="card span-8"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-chart" aria-hidden="true"></span>Фактический расчет по годам</div><div class="card-sub">Только сданные лоты; аренда индексируется по предпосылке модели</div></div></div><div class="chart tall" id="annualPlan"></div></div>
+<div class="card span-4 dark"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-gauge" aria-hidden="true"></span>Текущая заполняемость</div><div class="card-sub">От арендопригодной площади</div></div></div><div class="chart small" id="occupancyGauge"></div></div>
+<div class="card span-6"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-pie" aria-hidden="true"></span>Состав месячного оборота</div><div class="card-sub">Базовая аренда / OPEX / НДС</div></div></div><div class="chart small" id="revenueDonut"></div></div>
+<div class="card span-6 green"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-layout" aria-hidden="true"></span>Контур площадей</div><div class="card-sub">Сдано, доступно, неарендопригодная</div></div></div><div class="chart small" id="areaPie"></div></div>
+
+<div class="card span-12"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-chart" aria-hidden="true"></span>Месячная динамика факта</div><div class="card-sub">Фактическая аренда, OPEX и оборот с НДС по текущим фильтрам</div></div></div><div class="chart tall" id="monthlyTimeline"></div></div></div>
+</section>
+
+<section class="section" id="vacancy">
+<div class="grid kpis">
+<div class="card kpi dark"><div class="kpi-label">Вакантность</div><div class="kpi-value" id="vacancyRate">—</div><div class="kpi-hint">доступно / арендопригодно</div><div class="mini" id="sparkVacancyGaugeMini"></div></div>
+<div class="card kpi"><div class="kpi-label">Вакантная площадь</div><div class="kpi-value" id="vacancyArea">—</div><div class="kpi-hint" id="vacancyLotsCount">—</div><div class="mini" id="sparkVacancyArea"></div></div>
+<div class="card kpi orange"><div class="kpi-label">Аренда вакантных / мес</div><div class="kpi-value" id="vacancyRentM">—</div><div class="kpi-hint">без НДС</div><div class="mini" id="sparkVacancyRentM"></div></div>
+<div class="card kpi"><div class="kpi-label">Аренда вакантных / год</div><div class="kpi-value" id="vacancyRentY">—</div><div class="kpi-hint">без НДС</div><div class="mini" id="sparkVacancyRentY"></div></div>
+<div class="card kpi green"><div class="kpi-label">Вакантный оборот / мес</div><div class="kpi-value" id="vacancyAllM">—</div><div class="kpi-hint">аренда + OPEX + НДС</div><div class="mini" id="sparkVacancyAllM"></div></div>
+<div class="card kpi dark"><div class="kpi-label">Вакантный оборот / год</div><div class="kpi-value" id="vacancyAllY">—</div><div class="kpi-hint">потенциал при сдаче</div><div class="mini" id="sparkVacancyAllY"></div></div>
+</div>
+<div class="grid cols-12">
+<div class="card span-4 dark"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-gauge" aria-hidden="true"></span>Процент вакантности</div><div class="card-sub">По выбранному формату; статус-фильтр не скрывает вакансии</div></div></div><div class="chart small" id="vacancyGauge"></div></div>
+<div class="card span-8"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-banknote" aria-hidden="true"></span>Деньги в несданных площадях</div><div class="card-sub">Потенциал вакантных лотов: аренда, OPEX и НДС</div></div></div><div class="chart small" id="vacancyMoney"></div></div>
+<div class="card span-6"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-banknote" aria-hidden="true"></span>Вакантный потенциал по форматам</div><div class="card-sub">Сумма «всё включено» / мес по вакантным форматам</div></div></div><div class="chart tall" id="vacancyByFormat"></div></div>
+<div class="card span-6 green"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-ruler" aria-hidden="true"></span>Площадь вакансии по форматам</div><div class="card-sub">Где физически находится пустующая площадь</div></div></div><div class="chart tall" id="vacancyAreaByFormat"></div></div>
+<div class="card span-12"><div class="table-toolbar"><div><div class="card-title"><span class="spark-dot icon-building" aria-hidden="true"></span>Реестр вакантных помещений</div><div class="card-sub">Сколько денег дает каждый несданный лот при сдаче по ставке модели</div></div><input class="search" id="vacancySearch" placeholder="Поиск по вакантному лоту или формату…"/></div><div class="table-wrap" id="vacancyTable"></div></div>
+</div>
+</section>
+<section class="section" id="lots">
+<div class="grid cols-12">
+<div class="card span-7 dark"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-layout" aria-hidden="true"></span>Карта лотов: факт и потенциал</div><div class="card-sub">Treemap: сданные = факт, вакантные = денежный потенциал «всё включено»</div></div></div><div class="chart tall" id="lotTreemap"></div></div>
+<div class="card span-5"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-users" aria-hidden="true"></span>Оборот и потенциал по арендаторам</div><div class="card-sub">Сданные лоты = факт; вакантные лоты сгруппированы как потенциал</div></div></div><div class="chart tall" id="tenantBar"></div></div>
+<div class="card span-12"><div class="table-toolbar"><div><div class="card-title"><span class="spark-dot icon-table" aria-hidden="true"></span>Реестр лотов по текущему фильтру</div><div class="card-sub">Строки пересчитываются при смене статуса и формата</div></div><input class="search" id="lotSearch" placeholder="Поиск по лоту, арендатору, формату…"/></div><div class="table-wrap" id="lotsTable"></div></div>
+</div>
+</section>
+
+<section class="section" id="expenses">
+<div class="grid cols-12">
+<div class="card span-7 dark"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-receipt" aria-hidden="true"></span>Расходы и эксплуатационные платежи</div><div class="card-sub">Сопоставление OPEX с платежами арендаторов</div></div></div><div class="chart tall" id="expensesPlan"></div></div>
+<div class="card span-5"><div class="card-head"><div><div class="card-title"><span class="spark-dot icon-pie" aria-hidden="true"></span>Структура расходов</div><div class="card-sub">Категории из финансовой модели</div></div></div><div class="chart tall" id="expenseMix"></div></div>
+<div class="card span-12"><div class="table-toolbar"><div><div class="card-title"><span class="spark-dot icon-receipt" aria-hidden="true"></span>Таблица расходов</div><div class="card-sub">Исходная финансовая таблица встроена в HTML</div></div></div><div class="table-wrap" id="expensesTable"></div></div>
+</div>
+</section>
+<section class="section" id="tables">
+<div class="card">
+<div class="table-toolbar"><div><div class="card-title"><span class="spark-dot icon-table" aria-hidden="true"></span>Все таблицы модели</div><div class="card-sub">Финансовая модель внутри HTML: титул, расходы, реестр, контроль и фактический дашборд</div></div><input class="search" id="rawSearch" placeholder="Поиск по выбранной таблице…"/></div>
+<div class="table-toolbar" style="padding-top:12px;"><div class="tabs" id="rawTabs"></div></div>
+<div class="table-wrap" id="rawTable"></div>
+</div>
+</section>
+</main>
+<div class="footer">Apache ECharts · данные встроены в HTML · обновлено <span id="generatedAt"></span></div>
+</div>
+<script>
+    const DATA = JSON.parse(document.getElementById('model-data').textContent);
+    const years = DATA.fact.years.map(String);
+    const PALETTE = ['#C64235','#C66A3A','#7F2223','#2F6B5B','#8AB7A0','#121417','#697386','#4E6F8A'];
+    const money = n => new Intl.NumberFormat('ru-RU', {maximumFractionDigits:0}).format(Math.round(n||0)) + ' ₽';
+    const num = (n,d=0) => new Intl.NumberFormat('ru-RU', {maximumFractionDigits:d, minimumFractionDigits:d}).format(n||0);
+    const pct = n => new Intl.NumberFormat('ru-RU', {style:'percent', maximumFractionDigits:1}).format(n||0);
+    const mln = n => +(n/1e6).toFixed(2);
+    const shortRub = n => {
+      const a = Math.abs(n||0);
+      if (a >= 1e9) return num(n/1e9,1)+' млрд ₽';
+      if (a >= 1e6) return num(n/1e6,1)+' млн ₽';
+      return money(n);
+    };
+    const state = { status:'Все', format:'Все', section:'overview', rawSheet:'Реестр аренды' };
+    const charts = {};
+
+    function gradient(a,b,vertical=true) {
+      return new echarts.graphic.LinearGradient(0,0, vertical?0:1, vertical?1:0, [{offset:0,color:a},{offset:1,color:b}]);
+    }
+    function escapeHtml(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function getAllLots() { return DATA.fact.lots; }
+    function filteredLots() {
+      return getAllLots().filter(l => (state.status==='Все' || l.status===state.status) && (state.format==='Все' || l.format===state.format));
+    }
+    function denominatorLots() {
+      return getAllLots().filter(l => state.format==='Все' || l.format===state.format);
+    }
+    function monthIndex(date, start) {
+      const y = +date.slice(0,4), m = +date.slice(5,7);
+      const sy = +start.slice(0,4), sm = +start.slice(5,7);
+      return (y - sy) * 12 + (m - sm);
+    }
+    function indexFactor(date, start) {
+      const i = monthIndex(date, start);
+      if (i < 0) return 0;
+      return Math.pow(1 + DATA.control.indexation, Math.floor(i / 12));
+    }
+    function monthlyRentForLot(l, date) {
+      if (!l.isLeased) return 0;
+      const f = indexFactor(date, l.start || DATA.fact.start);
+      return f ? l.baseMonthlyRent * f : 0;
+    }
+    function monthlyOpexForLot(l, date) {
+      if (!l.isLeased) return 0;
+      return monthIndex(date, l.start || DATA.fact.start) >= 0 ? l.baseMonthlyOpex : 0;
+    }
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+    function marketMonthlyRentForLot(l, date) {
+      const f = indexFactor(date, l.start || DATA.fact.start);
+      return f ? (l.marketMonthlyRent || l.baseMonthlyRent || 0) * f : 0;
+    }
+    function marketMonthlyOpexForLot(l, date) {
+      return monthIndex(date, l.start || DATA.fact.start) >= 0 ? (l.marketMonthlyOpex || l.baseMonthlyOpex || 0) : 0;
+    }
+    function potentialAllInForLot(l, date) {
+      const rent = marketMonthlyRentForLot(l, date);
+      const opex = marketMonthlyOpexForLot(l, date);
+      return (rent + opex) * (1 + DATA.control.vat);
+    }
+    function vacantLots() {
+      return getAllLots().filter(l => !l.isLeased && (state.format==='Все' || l.format===state.format));
+    }
+    function vacancyDenominatorLots() {
+      return getAllLots().filter(l => state.format==='Все' || l.format===state.format);
+    }
+    function vacancyMetrics() {
+      const lots = vacantLots();
+      const denom = vacancyDenominatorLots();
+      const date = DATA.fact.start;
+      const vacantArea = lots.reduce((s,l)=>s+l.area,0);
+      const denomArea = denom.reduce((s,l)=>s+l.area,0);
+      const leasedArea = denom.reduce((s,l)=>s+(l.isLeased ? l.area : 0),0);
+      const monthlyRent = lots.reduce((s,l)=>s+marketMonthlyRentForLot(l,date),0);
+      const monthlyOpex = lots.reduce((s,l)=>s+marketMonthlyOpexForLot(l,date),0);
+      const monthlyVat = (monthlyRent + monthlyOpex) * DATA.control.vat;
+      const monthlyAll = monthlyRent + monthlyOpex + monthlyVat;
+      const factAll = denom.reduce((s,l)=>s+(l.isLeased ? (monthlyRentForLot(l,date)+monthlyOpexForLot(l,date))*(1+DATA.control.vat) : 0),0);
+      return { lots, vacantArea, denomArea, leasedArea, monthlyRent, monthlyOpex, monthlyVat, monthlyAll, annualRent:monthlyRent*12, annualOpex:monthlyOpex*12, annualVat:monthlyVat*12, annualAll:monthlyAll*12, vacancyRate: denomArea ? vacantArea/denomArea : 0, occupancyRate: denomArea ? leasedArea/denomArea : 0, factAll, fullPotentialAll: factAll+monthlyAll, moneyShare: factAll+monthlyAll ? monthlyAll/(factAll+monthlyAll) : 0 };
+    }
+    function vacancyMonthlySeries() {
+      const lots = vacantLots();
+      return DATA.fact.months.map(m => {
+        const rent = lots.reduce((s,l)=>s+marketMonthlyRentForLot(l,m.date),0);
+        const opex = lots.reduce((s,l)=>s+marketMonthlyOpexForLot(l,m.date),0);
+        const vat = (rent+opex)*DATA.control.vat;
+        return { ...m, rent, opex, vat, totalNoVat:rent+opex, totalVat:rent+opex+vat };
+      });
+    }
+    function vacancyAnnual() {
+      const rows = Object.fromEntries(DATA.fact.years.map(y => [String(y), {year:y, rent:0, opex:0, vat:0, total:0, totalNoVat:0}]));
+      vacancyMonthlySeries().forEach(m => {
+        const y = m.date.slice(0,4);
+        if (!rows[y]) return;
+        rows[y].rent += m.rent;
+        rows[y].opex += m.opex;
+      });
+      Object.values(rows).forEach(r => { r.vat = (r.rent+r.opex)*DATA.control.vat; r.totalNoVat = r.rent+r.opex; r.total = r.totalNoVat+r.vat; });
+      return DATA.fact.years.map(y => rows[String(y)]);
+    }
+    function vacancyByFormatRows() {
+      const by = {};
+      vacantLots().forEach(l => {
+        const key = l.format;
+        if (!by[key]) by[key] = {format:key, area:0, lots:0, rent:0, opex:0, vat:0, all:0};
+        const rent = marketMonthlyRentForLot(l, DATA.fact.start);
+        const opex = marketMonthlyOpexForLot(l, DATA.fact.start);
+        by[key].area += l.area;
+        by[key].lots += 1;
+        by[key].rent += rent;
+        by[key].opex += opex;
+      });
+      return Object.values(by).map(x => ({...x, vat:(x.rent+x.opex)*DATA.control.vat, all:(x.rent+x.opex)*(1+DATA.control.vat)})).sort((a,b)=>b.all-a.all);
+    }
+    function currentMetrics() {
+      const lots = filteredLots();
+      const denom = denominatorLots();
+      const area = lots.reduce((s,l)=>s+l.area,0);
+      const leasedArea = lots.reduce((s,l)=>s+(l.isLeased ? l.area : 0),0);
+      const denomArea = denom.reduce((s,l)=>s+l.area,0);
+      const date = DATA.fact.start;
+      const monthlyRent = lots.reduce((s,l)=>s+monthlyRentForLot(l,date),0);
+      const monthlyOpex = lots.reduce((s,l)=>s+monthlyOpexForLot(l,date),0);
+      const monthlyVat = (monthlyRent+monthlyOpex)*DATA.control.vat;
+      const monthlyAll = monthlyRent+monthlyOpex+monthlyVat;
+      return { lots, area, leasedArea, denomArea, monthlyRent, monthlyOpex, monthlyVat, monthlyAll, annualRent:monthlyRent*12, annualOpex:monthlyOpex*12, annualVat:monthlyVat*12, annualAll:monthlyAll*12, occupancy: denomArea ? leasedArea/denomArea : 0 };
+    }
+    function monthlySeries() {
+      const lots = filteredLots();
+      return DATA.fact.months.map(m => {
+        const rent = lots.reduce((s,l)=>s+monthlyRentForLot(l,m.date),0);
+        const opex = lots.reduce((s,l)=>s+monthlyOpexForLot(l,m.date),0);
+        const vat = (rent+opex)*DATA.control.vat;
+        const area = lots.reduce((s,l)=>s+(l.isLeased ? l.area : 0),0);
+        return { ...m, rent, opex, totalNoVat:rent+opex, vat, totalVat:rent+opex+vat, area };
+      });
+    }
+    function annualFiltered() {
+      const rows = Object.fromEntries(DATA.fact.years.map(y => [String(y), {year:y, rent:0, opex:0, vat:0, total:0, totalNoVat:0}]));
+      monthlySeries().forEach(m => {
+        const y = m.date.slice(0,4);
+        if (!rows[y]) return;
+        rows[y].rent += m.rent;
+        rows[y].opex += m.opex;
+      });
+      Object.values(rows).forEach(r => { r.vat = (r.rent+r.opex)*DATA.control.vat; r.totalNoVat = r.rent+r.opex; r.total = r.totalNoVat+r.vat; });
+      return DATA.fact.years.map(y => rows[String(y)]);
+    }
+
+    function initSelectors() {
+      const filters = document.getElementById('filters');
+      const defs = [
+        ['status','Статус', ['Все', ...DATA.statuses]],
+        ['format','Формат', ['Все', ...DATA.formats]]
+      ];
+      filters.innerHTML = defs.map(([key,label,options]) => `
+        <div class="selector" data-key="${key}">
+          <div class="selector-label">${label}</div>
+          <button class="selector-btn" type="button">${escapeHtml(state[key])}</button>
+          <div class="selector-menu">${options.map(o=>`<div class="selector-option ${o===state[key]?'active':''}" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('')}</div>
+        </div>`).join('');
+      filters.addEventListener('click', e => {
+        const btn = e.target.closest('.selector-btn');
+        const opt = e.target.closest('.selector-option');
+        if (btn) {
+          const sel = btn.closest('.selector');
+          document.querySelectorAll('.selector').forEach(s => { if(s!==sel) s.classList.remove('open'); });
+          sel.classList.toggle('open');
+        }
+        if (opt) {
+          const sel = opt.closest('.selector');
+          const key = sel.dataset.key;
+          state[key] = opt.dataset.value;
+          sel.classList.remove('open');
+          updateSelectorLabels();
+          updateAll();
+        }
+      });
+      document.addEventListener('click', e => { if(!e.target.closest('.selector')) document.querySelectorAll('.selector').forEach(s=>s.classList.remove('open')); });
+    }
+    function updateSelectorLabels() {
+      document.querySelectorAll('.selector').forEach(sel => {
+        const key = sel.dataset.key;
+        sel.querySelector('.selector-btn').textContent = state[key];
+        sel.querySelectorAll('.selector-option').forEach(o => o.classList.toggle('active', o.dataset.value === state[key]));
+      });
+    }
+
+    function chart(id) {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      if (!charts[id]) charts[id] = echarts.init(el, null, {renderer:'canvas'});
+      return charts[id];
+    }
+    function setChart(id, option) { const c = chart(id); if (c) c.setOption(option, true); }
+    const baseGrid = { top:50, right:26, bottom:44, left:54, containLabel:true };
+    const tooltip = { trigger:'axis', backgroundColor:'rgba(17,17,19,.94)', borderColor:'rgba(255,255,255,.12)', textStyle:{color:'#fff'}, axisPointer:{ type:'cross', lineStyle:{color:'#C64235'} } };
+    const toolbox = { show:true, right:16, top:10, feature:{ dataZoom:{ yAxisIndex:'none' }, restore:{}, saveAsImage:{ pixelRatio:2 } }, iconStyle:{ borderColor:'#9a958e' } };
+
+    function renderHeroTrend() {
+      const m = monthlySeries();
+      setChart('heroTrend', {
+        color:PALETTE, animationDuration:900, animationEasing:'cubicOut', tooltip, grid:{top:20,right:18,bottom:28,left:42,containLabel:true},
+        xAxis:{ type:'category', data:m.map(x=>x.label), axisLine:{show:false}, axisTick:{show:false}, axisLabel:{color:'#6e6a64'} },
+        yAxis:{ type:'value', axisLabel:{color:'#6e6a64', formatter:v=>v+' млн'}, splitLine:{lineStyle:{color:'rgba(17,17,19,.08)'}} },
+        series:[
+          {name:'Аренда', type:'line', smooth:true, showSymbol:false, data:m.map(x=>mln(x.rent)), lineStyle:{width:3,color:'#121417'}, areaStyle:{color:gradient('rgba(255,43,43,.22)','rgba(255,43,43,0)')}},
+          {name:'Всё включено', type:'bar', data:m.map(x=>mln(x.totalVat)), barWidth:'42%', itemStyle:{borderRadius:[5,5,0,0], color:gradient('#C64235','#D88A55')}},
+          {name:'Потенциал вакантных', type:'line', smooth:true, showSymbol:false, data:vacancyMonthlySeries().map(x=>mln(x.totalVat)), lineStyle:{width:3,type:'dashed',color:'#2F6B5B'}}
+        ]
+      });
+    }
+    function renderKpis() {
+      const m = currentMetrics();
+      document.getElementById('stamp').textContent = `Обновлено: ${DATA.meta.generatedAt}`;
+      document.getElementById('generatedAt').textContent = DATA.meta.generatedAt;
+      document.getElementById('heroRent').textContent = shortRub(m.monthlyRent);
+      document.getElementById('heroAllIn').textContent = shortRub(m.monthlyAll);
+      document.getElementById('heroOcc').textContent = pct(m.occupancy);
+      const v = vacancyMetrics();
+      setText('heroVacancy', pct(v.vacancyRate));
+      document.getElementById('kpiArea').textContent = num(m.area,0)+' м²';
+      document.getElementById('kpiAreaSub').textContent = `${m.lots.length} лот(ов) · сдано ${num(m.leasedArea,0)} из ${num(m.denomArea,0)} м²`;
+      document.getElementById('kpiRentM').textContent = shortRub(m.monthlyRent);
+      document.getElementById('kpiRentY').textContent = shortRub(m.annualRent);
+      document.getElementById('kpiOpex').textContent = shortRub(m.monthlyOpex);
+      document.getElementById('kpiVat').textContent = shortRub(m.monthlyVat);
+      document.getElementById('kpiAllY').textContent = shortRub(m.annualAll);
+      setText('kpiVacancyRate', pct(v.vacancyRate));
+      setText('kpiVacancySub', `${num(v.vacantArea,0)} м² · ${v.lots.length} лот(ов)`);
+      setText('kpiVacancyRentM', shortRub(v.monthlyRent));
+      setText('kpiVacancyAllY', shortRub(v.annualAll));
+      renderMini('sparkArea', [m.leasedArea, Math.max(m.denomArea-m.leasedArea,0)], 'pie');
+      renderMini('sparkRent', annualFiltered().map(x=>mln(x.rent)), 'line');
+      renderMini('sparkRentY', annualFiltered().map(x=>mln(x.rent)), 'bar');
+      renderMini('sparkOpex', annualFiltered().map(x=>mln(x.opex)), 'lineGreen');
+      renderMini('sparkVat', annualFiltered().map(x=>mln(x.vat)), 'barGreen');
+      renderMini('sparkAll', annualFiltered().map(x=>mln(x.total)), 'lineOrange');
+      renderMini('sparkVacancyRate', [v.vacantArea, Math.max(v.denomArea-v.vacantArea,0)], 'pie');
+      renderMini('sparkVacancyRent', vacancyAnnual().map(x=>mln(x.rent)), 'bar');
+      renderMini('sparkVacancyAll', vacancyAnnual().map(x=>mln(x.total)), 'lineOrange');
+    }
+    function renderMini(id, vals, type) {
+      let option;
+      if (type==='pie') option = {animationDuration:900, series:[{type:'pie', radius:['62%','88%'], avoidLabelOverlap:true, label:{show:false}, data:[{value:vals[0], itemStyle:{color:'#C64235'}},{value:Math.max(vals[1],0), itemStyle:{color:'rgba(255,255,255,.22)'}}]}]};
+      else {
+        const line = type.includes('line'); const green = type.includes('Green'); const orange = type.includes('Orange');
+        option = { animationDuration:900, grid:{left:0,right:0,top:6,bottom:6}, xAxis:{type:'category', show:false, data:vals.map((_,i)=>i)}, yAxis:{type:'value', show:false}, series:[{ type: line?'line':'bar', smooth:true, showSymbol:false, data:vals, barWidth:'52%', lineStyle:{width:3,color: green?'#8AB7A0':orange?'#C66A3A':'#C64235'}, itemStyle:{borderRadius:[5,5,5,5], color: gradient(green?'#8AB7A0':'#C64235', orange?'#D88A55':'#C66A3A') }, areaStyle: line?{color:gradient(green?'rgba(104,208,155,.28)':'rgba(255,43,43,.24)','rgba(255,255,255,0)')}:undefined }] };
+      }
+      setChart(id, option);
+    }
+    function renderAnnualPlan() {
+      const a = annualFiltered();
+      setChart('annualPlan', {
+        color:['#121417','#2F6B5B','#D88A55','#C64235'], animationDuration:1000, tooltip, legend:{top:10,left:22,textStyle:{color:'#6e6a64'}}, toolbox,
+        grid:baseGrid, xAxis:{type:'category', data:a.map(x=>x.year), axisTick:{show:false}, axisLine:{show:false}},
+        yAxis:{type:'value', axisLabel:{formatter:v=>v+' млн'}, splitLine:{lineStyle:{color:'rgba(17,17,19,.08)'}}},
+        series:[
+          {name:'Аренда', type:'bar', stack:'rev', data:a.map(x=>mln(x.rent)), itemStyle:{borderRadius:[8,8,0,0], color:gradient('#121417','#4b4449')}},
+          {name:'OPEX', type:'bar', stack:'rev', data:a.map(x=>mln(x.opex)), itemStyle:{color:gradient('#2F6B5B','#8AB7A0')}},
+          {name:'НДС', type:'bar', stack:'rev', data:a.map(x=>mln(x.vat)), itemStyle:{color:gradient('#D88A55','#C66A3A')}},
+          {name:'Итого с НДС', type:'line', smooth:true, symbolSize:8, data:a.map(x=>mln(x.total)), lineStyle:{width:4,color:'#C64235'}, itemStyle:{color:'#C64235'}}
+        ]
+      });
+    }
+    function renderOccupancyGauge() {
+      const m = currentMetrics();
+      setChart('occupancyGauge', {
+        animationDuration:1000, series:[{ type:'gauge', startAngle:205, endAngle:-25, min:0, max:100, radius:'92%', center:['50%','58%'], progress:{show:true, width:16, itemStyle:{color:gradient('#C64235','#D88A55',false)}}, axisLine:{lineStyle:{width:16,color:[[1,'rgba(255,255,255,.18)']]}}, pointer:{show:false}, axisTick:{show:false}, splitLine:{show:false}, axisLabel:{show:false}, anchor:{show:true, size:10, itemStyle:{color:'#C64235'}}, title:{offsetCenter:[0,'34%'], color:'rgba(255,255,255,.65)', fontSize:13}, detail:{valueAnimation:true, formatter:'{value}%', color:'#fff', fontSize:44, fontWeight:700, offsetCenter:[0,'0%']}, data:[{value:+(m.occupancy*100).toFixed(1), name:'фактическая сдача'}] }]
+      });
+    }
+    function renderRevenueDonut() {
+      const m = currentMetrics();
+      setChart('revenueDonut', {
+        color:['#121417','#2F6B5B','#C64235'], animationDuration:900, tooltip:{trigger:'item', formatter:p=>`${p.name}<br><b>${money(p.value*1e6)}</b> (${p.percent}%)`, backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}}, legend:{bottom:8,left:'center',textStyle:{color:'#6e6a64'}},
+        series:[{ type:'pie', radius:['56%','78%'], center:['50%','46%'], avoidLabelOverlap:true, label:{formatter:p=>p.percent>8?p.name:'', fontWeight:800}, itemStyle:{borderColor:'#fff', borderWidth:3}, data:[{name:'Аренда', value:mln(m.monthlyRent)},{name:'OPEX', value:mln(m.monthlyOpex)},{name:'НДС', value:mln(m.monthlyVat)}] }]
+      });
+    }
+    function renderAreaPie() {
+      setChart('areaPie', {
+        color:['#C64235','#8AB7A0','rgba(255,255,255,.24)'], animationDuration:900, tooltip:{trigger:'item', backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter:p=>`${p.name}<br><b>${num(p.value,0)} м²</b> (${p.percent}%)`}, legend:{bottom:8,left:'center',textStyle:{color:'rgba(255,255,255,.72)'}},
+        series:[{ type:'pie', radius:['42%','76%'], center:['50%','45%'], roseType:'area', label:{color:'#fff', fontWeight:800}, itemStyle:{borderColor:'rgba(255,255,255,.16)', borderWidth:2}, data:[{name:'Сдано', value:DATA.control.leasedArea},{name:'Доступно', value:DATA.control.availableArea},{name:'Неаренд.', value:DATA.control.nonRentableArea}] }]
+      });
+    }
+    function renderLotTreemap() {
+      const lots = filteredLots().map(l => {
+        const all = l.isLeased ? (monthlyRentForLot(l, DATA.fact.start) + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
+        return { name:l.lot, value:Math.max(mln(all), 0.01), rawValue:all, tenant:l.isLeased ? l.tenant : 'Вакантный лот', mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.14)', borderWidth:2 } };
+      });
+      setChart('lotTreemap', {
+        color:PALETTE, animationDuration:1100, tooltip:{formatter:p=>`<b>${p.name}</b><br>${escapeHtml(p.data.tenant)}<br>${p.data.mode}: ${money(p.data.rawValue)}`, backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}},
+        series:[{ type:'treemap', roam:true, nodeClick:false, breadcrumb:{show:false}, label:{show:true, formatter:'{b}', color:'#fff', fontWeight:800}, upperLabel:{show:false}, itemStyle:{gapWidth:5,borderRadius:7}, levels:[{itemStyle:{borderColor:'transparent', gapWidth:6}}], data:lots }]
+      });
+    }
+    function renderTenantBar() {
+      const by = {};
+      filteredLots().forEach(l => {
+        const key = l.isLeased ? (l.tenant || '—') : 'Вакантные лоты';
+        if (!by[key]) by[key] = {area:0, all:0, rent:0};
+        const rent = l.isLeased ? monthlyRentForLot(l, DATA.fact.start) : marketMonthlyRentForLot(l, DATA.fact.start);
+        const opex = l.isLeased ? monthlyOpexForLot(l, DATA.fact.start) : marketMonthlyOpexForLot(l, DATA.fact.start);
+        by[key].area += l.area; by[key].rent += rent; by[key].all += (rent + opex)*(1+DATA.control.vat);
+      });
+      const rows = Object.entries(by).map(([tenant,v])=>({tenant,...v})).sort((a,b)=>b.all-a.all || b.area-a.area);
+      setChart('tenantBar', {
+        animationDuration:900, tooltip:{trigger:'axis', axisPointer:{type:'shadow'}, backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter: params => { const p=params[0]; const r=rows[p.dataIndex]; return `<b>${escapeHtml(r.tenant)}</b><br>Факт / потенциал: ${money(r.all)}<br>Площадь: ${num(r.area,0)} м²`; } },
+        grid:{top:24,right:28,bottom:34,left:130,containLabel:true}, xAxis:{type:'value', axisLabel:{formatter:v=>v+'M'}, splitLine:{lineStyle:{color:'rgba(17,17,19,.08)'}}}, yAxis:{type:'category', inverse:true, data:rows.map(x=>x.tenant), axisTick:{show:false}, axisLine:{show:false}},
+        series:[{type:'bar', data:rows.map(x=>mln(x.all)), barWidth:18, itemStyle:{borderRadius:[0,10,10,0], color:gradient('#C64235','#D88A55',false)}}]
+      });
+    }
+    function renderMonthlyTimeline() {
+      const m = monthlySeries();
+      setChart('monthlyTimeline', {
+        color:['#121417','#2F6B5B','#C64235'], animationDuration:900, tooltip, legend:{top:10,left:22,textStyle:{color:'#6e6a64'}}, toolbox,
+        grid:baseGrid, dataZoom:[{type:'slider', height:22, bottom:10, borderColor:'rgba(17,17,19,.08)', fillerColor:'rgba(255,43,43,.20)', handleStyle:{color:'#C64235'}},{type:'inside'}],
+        xAxis:{type:'category', data:m.map(x=>x.label), axisTick:{show:false}, axisLine:{show:false}}, yAxis:{type:'value', axisLabel:{formatter:v=>v+' млн'}, splitLine:{lineStyle:{color:'rgba(17,17,19,.08)'}}},
+        series:[
+          {name:'Аренда', type:'line', smooth:true, showSymbol:false, data:m.map(x=>mln(x.rent)), lineStyle:{width:3,color:'#111113'}, areaStyle:{color:gradient('rgba(17,17,19,.18)','rgba(17,17,19,0)')}},
+          {name:'OPEX', type:'line', smooth:true, showSymbol:false, data:m.map(x=>mln(x.opex)), lineStyle:{width:3,color:'#2F6B5B'}},
+          {name:'Итого с НДС', type:'line', smooth:true, showSymbol:false, data:m.map(x=>mln(x.totalVat)), lineStyle:{width:4,color:'#C66A3A'}, areaStyle:{color:gradient('rgba(255,43,43,.24)','rgba(255,106,0,0)')}}
+        ]
+      });
+    }
+
+    function renderVacancy() {
+      renderVacancyKpis();
+      renderVacancyGauge();
+      renderVacancyMoney();
+      renderVacancyByFormat();
+      renderVacancyAreaByFormat();
+      renderVacancyTable();
+    }
+    function renderVacancyKpis() {
+      const v = vacancyMetrics();
+      setText('vacancyRate', pct(v.vacancyRate));
+      setText('vacancyArea', num(v.vacantArea,0)+' м²');
+      setText('vacancyLotsCount', `${v.lots.length} лот(ов) · формат: ${state.format}`);
+      setText('vacancyRentM', shortRub(v.monthlyRent));
+      setText('vacancyRentY', shortRub(v.annualRent));
+      setText('vacancyAllM', shortRub(v.monthlyAll));
+      setText('vacancyAllY', shortRub(v.annualAll));
+      renderMini('sparkVacancyGaugeMini', [v.vacantArea, Math.max(v.denomArea-v.vacantArea,0)], 'pie');
+      renderMini('sparkVacancyArea', [v.vacantArea, Math.max(v.leasedArea,0)], 'pie');
+      renderMini('sparkVacancyRentM', vacancyAnnual().map(x=>mln(x.rent)), 'bar');
+      renderMini('sparkVacancyRentY', vacancyAnnual().map(x=>mln(x.rent)), 'lineOrange');
+      renderMini('sparkVacancyAllM', vacancyAnnual().map(x=>mln(x.total)), 'barGreen');
+      renderMini('sparkVacancyAllY', vacancyAnnual().map(x=>mln(x.total)), 'lineOrange');
+    }
+    function renderVacancyGauge() {
+      const v = vacancyMetrics();
+      setChart('vacancyGauge', {
+        animationDuration:1000,
+        series:[{ type:'gauge', startAngle:205, endAngle:-25, min:0, max:100, radius:'92%', center:['50%','58%'], progress:{show:true, width:16, itemStyle:{color:gradient('#C66A3A','#C64235',false)}}, axisLine:{lineStyle:{width:16,color:[[1,'rgba(255,255,255,.18)']]}}, pointer:{show:false}, axisTick:{show:false}, splitLine:{show:false}, axisLabel:{show:false}, anchor:{show:true, size:10, itemStyle:{color:'#C66A3A'}}, title:{offsetCenter:[0,'34%'], color:'rgba(255,255,255,.65)', fontSize:13}, detail:{valueAnimation:true, formatter:'{value}%', color:'#fff', fontSize:44, fontWeight:700, offsetCenter:[0,'0%']}, data:[{value:+(v.vacancyRate*100).toFixed(1), name:'вакантность'}] }]
+      });
+    }
+    function renderVacancyMoney() {
+      const a = vacancyAnnual();
+      setChart('vacancyMoney', {
+        color:['#121417','#2F6B5B','#C66A3A','#C64235'], animationDuration:900, tooltip, legend:{top:10,left:22,textStyle:{color:'#6e6a64'}}, toolbox, grid:baseGrid,
+        xAxis:{type:'category', data:a.map(x=>x.year), axisTick:{show:false}, axisLine:{show:false}},
+        yAxis:{type:'value', axisLabel:{formatter:v=>v+' млн'}, splitLine:{lineStyle:{color:'rgba(17,17,19,.08)'}}},
+        series:[
+          {name:'Потенциал аренды', type:'bar', stack:'vac', data:a.map(x=>mln(x.rent)), itemStyle:{borderRadius:[8,8,0,0], color:gradient('#121417','#4b4449')}},
+          {name:'Потенциал OPEX', type:'bar', stack:'vac', data:a.map(x=>mln(x.opex)), itemStyle:{color:gradient('#2F6B5B','#8AB7A0')}},
+          {name:'НДС', type:'bar', stack:'vac', data:a.map(x=>mln(x.vat)), itemStyle:{color:gradient('#D88A55','#C66A3A')}},
+          {name:'Итого потенциал', type:'line', smooth:true, symbolSize:8, data:a.map(x=>mln(x.total)), lineStyle:{width:4,color:'#C64235'}, itemStyle:{color:'#C64235'}}
+        ]
+      });
+    }
+    function renderVacancyByFormat() {
+      const rows = vacancyByFormatRows();
+      setChart('vacancyByFormat', {
+        animationDuration:900, tooltip:{trigger:'axis', axisPointer:{type:'shadow'}, backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter: params => { const p=params[0]; const r=rows[p.dataIndex]; return `<b>${escapeHtml(r.format)}</b><br>Всё включено / мес: ${money(r.all)}<br>Аренда / мес: ${money(r.rent)}<br>Площадь: ${num(r.area,0)} м²`; }},
+        grid:{top:26,right:28,bottom:34,left:150,containLabel:true}, xAxis:{type:'value', axisLabel:{formatter:v=>v+' млн'}, splitLine:{lineStyle:{color:'rgba(17,17,19,.08)'}}}, yAxis:{type:'category', inverse:true, data:rows.map(x=>x.format), axisTick:{show:false}, axisLine:{show:false}},
+        series:[{type:'bar', data:rows.map(x=>mln(x.all)), barWidth:24, itemStyle:{borderRadius:[0,10,10,0], color:gradient('#C64235','#D88A55',false)}}]
+      });
+    }
+    function renderVacancyAreaByFormat() {
+      const rows = vacancyByFormatRows();
+      const el = document.getElementById('vacancyAreaByFormat');
+      if (!rows.length) {
+        if (charts.vacancyAreaByFormat) charts.vacancyAreaByFormat.dispose();
+        delete charts.vacancyAreaByFormat;
+        el.innerHTML = '<div class="empty chart-empty">Нет вакантных площадей по выбранному фильтру</div>';
+        return;
+      }
+      el.innerHTML = '';
+      setChart('vacancyAreaByFormat', {
+        animationDuration:900,
+        tooltip:{
+          trigger:'axis',
+          axisPointer:{type:'shadow'},
+          backgroundColor:'rgba(15,17,20,.95)',
+          borderColor:'rgba(255,255,255,.10)',
+          textStyle:{color:'#fff'},
+          formatter: params => {
+            const p = params[0];
+            const r = rows[p.dataIndex];
+            return `<b>${escapeHtml(r.format)}</b><br>Площадь: ${num(r.area,2)} м²<br>Доля вакансии: ${pct(r.area / Math.max(vacancyMetrics().vacantArea, 1))}<br>Потенциал / мес: ${money(r.all)}`;
+          }
+        },
+        grid:{top:30,right:34,bottom:42,left:150,containLabel:true},
+        xAxis:{type:'value', axisLabel:{formatter:v=>num(v,0)+' м²', color:'rgba(255,255,255,.70)'}, splitLine:{lineStyle:{color:'rgba(255,255,255,.10)'}}, axisLine:{show:false}, axisTick:{show:false}},
+        yAxis:{type:'category', inverse:true, data:rows.map(x=>x.format), axisTick:{show:false}, axisLine:{show:false}, axisLabel:{color:'rgba(255,255,255,.82)', fontWeight:700}},
+        series:[{
+          name:'Вакантная площадь',
+          type:'bar',
+          data:rows.map(x=>+x.area.toFixed(2)),
+          barWidth:22,
+          label:{show:true, position:'right', formatter:p=>num(p.value,0)+' м²', color:'rgba(255,255,255,.90)', fontWeight:800},
+          itemStyle:{borderRadius:[0,9,9,0], color:gradient('#C64235','#D88A55',false)}
+        }]
+      });
+    }
+    function renderVacancyTable() {
+      const q = (document.getElementById('vacancySearch')?.value || '').toLowerCase();
+      const lots = vacantLots().filter(l => [l.lot,l.format,l.status].join(' ').toLowerCase().includes(q));
+      const total = lots.reduce((s,l)=>s+potentialAllInForLot(l, DATA.fact.start),0);
+      const rows = lots.map(l => {
+        const rent = marketMonthlyRentForLot(l, DATA.fact.start);
+        const opex = marketMonthlyOpexForLot(l, DATA.fact.start);
+        const vat = (rent+opex)*DATA.control.vat;
+        const all = rent+opex+vat;
+        return {l, rent, opex, vat, all};
+      }).sort((a,b)=>b.all-a.all);
+      const head = ['Лот','Формат','Площадь','Ставка','Аренда / мес','OPEX / мес','НДС / мес','Всё включено / мес','Аренда / год','Всё включено / год','Доля'];
+      const body = rows.map(r => [r.l.lot, r.l.format, num(r.l.area,2)+' м²', num(r.l.baseRate,0)+' ₽/м²/год', money(r.rent), money(r.opex), money(r.vat), money(r.all), money(r.rent*12), money(r.all*12), pct(total ? r.all/total : 0)]);
+      renderTable('vacancyTable', head, body);
+    }
+    function renderExpenses() {
+      const rows = DATA.expenses.annual || [];
+      setChart('expensesPlan', {
+        color:['#C64235','#2F6B5B','#fff'], animationDuration:900, tooltip, legend:{top:10,left:22,textStyle:{color:'rgba(255,255,255,.72)'}}, toolbox, grid:baseGrid,
+        xAxis:{type:'category', data:DATA.fact.years, axisTick:{show:false}, axisLine:{show:false}, axisLabel:{color:'rgba(255,255,255,.7)'}}, yAxis:{type:'value', axisLabel:{formatter:v=>v+' млн', color:'rgba(255,255,255,.7)'}, splitLine:{lineStyle:{color:'rgba(255,255,255,.10)'}}},
+        series: rows.map((r,i)=>({name:r.metric, type:i===0?'bar':'line', smooth:true, data:DATA.fact.years.map(y=>mln(r[String(y)]||0)), barWidth:'36%', itemStyle:{borderRadius:[10,10,0,0], color:i===0?gradient('#C64235','#D88A55'):undefined}, lineStyle:{width:3} }))
+      });
+      const cats = DATA.expenses.categories || [];
+      setChart('expenseMix', {
+        color:['#121417','#C64235','#C66A3A','#2F6B5B','#697386','#4E6F8A'], animationDuration:900,
+        tooltip:{trigger:'item', backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}, formatter:p=>`${p.name}<br><b>${money(p.value)}</b> (${p.percent}%)`}, legend:{bottom:8,left:'center',textStyle:{color:'#6e6a64'}},
+        series:[{type:'pie', radius:['40%','78%'], center:['50%','44%'], roseType:'area', itemStyle:{borderColor:'#fff', borderWidth:3}, label:{fontWeight:800}, data:cats.map(c=>({name:c.article || c.category || 'Без категории', value:c.monthly || c.annual || 0})) }]
+      });
+      renderRawArray('expensesTable', DATA.rawSheets['Расходы'] || []);
+    }
+    function renderLotsTable() {
+      const q = (document.getElementById('lotSearch')?.value || '').toLowerCase();
+      const rows = filteredLots().filter(l => [l.lot,l.tenant,l.format,l.status].join(' ').toLowerCase().includes(q));
+      const head = ['Арендатор','Лот','Формат','Статус','Площадь','Ставка','Факт аренда / мес','Факт всё включено / мес','Потенциал аренды / мес','Потенциал всё включено / мес'];
+      const body = rows.map(l => {
+        const rent = monthlyRentForLot(l, DATA.fact.start);
+        const all = (rent + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat);
+        const potentialRent = l.isLeased ? rent : marketMonthlyRentForLot(l, DATA.fact.start);
+        const potentialAll = l.isLeased ? all : potentialAllInForLot(l, DATA.fact.start);
+        return [l.tenant, l.lot, l.format, `<span class="status ${l.status==='Сдано'?'leased':'free'}">${escapeHtml(l.status)}</span>`, num(l.area,2)+' м²', num(l.baseRate,0)+' ₽/м²/год', money(rent), money(all), money(potentialRent), money(potentialAll)];
+      });
+      renderTable('lotsTable', head, body);
+    }
+    function excelColName(n) {
+      let s = '';
+      n += 1;
+      while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); }
+      return s;
+    }
+    function renderRawArray(id, arr, q='') {
+      const rows = (arr || []).filter(r => !q || r.join(' ').toLowerCase().includes(q.toLowerCase()));
+      if (!rows.length) { document.getElementById(id).innerHTML = '<div class="empty">Нет данных</div>'; return; }
+      const maxCols = Math.max(...rows.map(r=>r.length));
+      const head = Array.from({length:maxCols}, (_,i)=>excelColName(i));
+      const normalized = rows.map(r => Array.from({length:maxCols}, (_,i)=> escapeHtml(r[i] ?? '')));
+      renderTable(id, head, normalized, true);
+    }
+    function renderTable(id, head, body, raw=false) {
+      const th = `<thead><tr>${head.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>`;
+      const cell = c => {
+        const s = String(c ?? '');
+        if (/^<span class="status (leased|free)">/.test(s)) return s;
+        return escapeHtml(s);
+      };
+      const tb = `<tbody>${body.map(row=>`<tr>${row.map(c=>`<td>${raw ? String(c ?? '') : cell(c)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      document.getElementById(id).innerHTML = `<table>${th}${tb}</table>`;
+    }
+    function initRawTables() {
+      const names = Object.keys(DATA.rawSheets || {});
+      if (!names.includes(state.rawSheet)) state.rawSheet = names[0];
+      document.getElementById('rawTabs').innerHTML = names.map(n=>`<button data-sheet="${escapeHtml(n)}" class="${n===state.rawSheet?'active':''}">${escapeHtml(n)}</button>`).join('');
+      if (!initRawTables.bound) {
+        document.getElementById('rawTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; state.rawSheet=b.dataset.sheet; renderRawCurrent(); });
+        document.getElementById('rawSearch').addEventListener('input', renderRawCurrent);
+        initRawTables.bound = true;
+      }
+      renderRawCurrent();
+    }
+    function renderRawCurrent() {
+      document.querySelectorAll('#rawTabs button').forEach(b=>b.classList.toggle('active', b.dataset.sheet===state.rawSheet));
+      renderRawArray('rawTable', DATA.rawSheets[state.rawSheet] || [], document.getElementById('rawSearch').value || '');
+    }
+    function renderAllCharts() {
+      renderHeroTrend(); renderKpis(); renderAnnualPlan(); renderOccupancyGauge(); renderRevenueDonut(); renderAreaPie(); renderVacancy(); renderLotTreemap(); renderTenantBar(); renderMonthlyTimeline(); renderExpenses(); renderLotsTable();
+    }
+    function updateAll() {
+      if (!window.echarts) return;
+      renderAllCharts();
+    }
+    function initNav() {
+      document.getElementById('nav').addEventListener('click', e => {
+        const b = e.target.closest('button'); if(!b) return;
+        state.section = b.dataset.section;
+        document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active', x===b));
+        document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active', s.id===state.section));
+        setTimeout(()=>Object.values(charts).forEach(c=>c.resize()), 60);
+      });
+    }
+    function init() {
+      initNav(); initSelectors(); initRawTables();
+      document.getElementById('lotSearch').addEventListener('input', renderLotsTable);
+      document.getElementById('vacancySearch').addEventListener('input', renderVacancyTable);
+      if (!window.echarts) { document.getElementById('noecharts').style.display = 'block'; return; }
+      renderAllCharts();
+      window.addEventListener('resize', () => Object.values(charts).forEach(c=>c.resize()));
+    }
+    init();
+</script>
+</body>
+</html>
