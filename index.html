@@ -1876,50 +1876,55 @@
     }
     function renderLotTreemap() {
       const allLots = filteredLots();
-      const tenantTotals = {};
+      const tenantMap = {};
       allLots.forEach(l => {
-        const key = l.isLeased ? (l.tenant || '—') : 'Вакантный лот';
+        const key  = l.isLeased ? (l.tenant || '—') : 'Вакантные лоты';
         const base = l.isLeased ? monthlyRentForLot(l, DATA.fact.start) : marketMonthlyRentForLot(l, DATA.fact.start);
         const all  = l.isLeased ? (base + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
-        if (!tenantTotals[key]) tenantTotals[key] = { base:0, all:0, count:0 };
-        tenantTotals[key].base += base;
-        tenantTotals[key].all  += all;
-        tenantTotals[key].count++;
+        if (!tenantMap[key]) tenantMap[key] = { children:[], base:0, all:0, isLeased:l.isLeased };
+        tenantMap[key].children.push({ name:l.lot, value:Math.max(mln(all), 0.01), baseValue:base, rawValue:all, tenant:key, mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.12)', borderWidth:2 } });
+        tenantMap[key].base += base;
+        tenantMap[key].all  += all;
       });
-      const lots = allLots.map(l => {
-        const key  = l.isLeased ? (l.tenant || '—') : 'Вакантный лот';
-        const base = l.isLeased ? monthlyRentForLot(l, DATA.fact.start) : marketMonthlyRentForLot(l, DATA.fact.start);
-        const all  = l.isLeased ? (base + monthlyOpexForLot(l, DATA.fact.start)) * (1+DATA.control.vat) : potentialAllInForLot(l, DATA.fact.start);
-        const tt   = tenantTotals[key];
-        return { name:l.lot, value:Math.max(mln(all), 0.01), baseValue:base, rawValue:all, tenant:l.isLeased ? l.tenant : 'Вакантный лот', tenantBase:tt.base, tenantAll:tt.all, tenantLots:tt.count, mode:l.isLeased?'Факт':'Потенциал', itemStyle:{ borderColor:'rgba(255,255,255,.14)', borderWidth:2 } };
-      });
-      const SEP = `<br><span style="color:rgba(255,255,255,.35);font-size:10px">──────────────────────</span>`;
+      const data = Object.entries(tenantMap).map(([name, t]) => ({
+        name, baseValue:t.base, rawValue:t.all, isLeased:t.isLeased,
+        children:t.children,
+        itemStyle:{ borderColor:'rgba(255,255,255,.32)', borderWidth:4 }
+      }));
       setChart('lotTreemap', {
         color:PALETTE, animationDuration:1100,
         tooltip:{
           formatter: p => {
             const d = p.data;
-            const multi = d.tenantLots > 1;
-            if (d.mode === 'Факт') {
-              let t = `<b>${escapeHtml(p.name)}</b><br><span style="color:rgba(255,255,255,.6)">${escapeHtml(d.tenant)}</span>`
-                + `<br>Лот · база / мес: <b>${money(d.baseValue)}</b>`
-                + `<br>Лот · всё включено / мес: ${money(d.rawValue)}`;
-              if (multi) t += SEP
-                + `<br>Итого арендатор · база / мес: <b>${money(d.tenantBase)}</b>`
-                + `<br>Итого арендатор · всё вкл. / мес: ${money(d.tenantAll)}`;
-              return t;
+            if (d.children) {
+              const label = d.isLeased ? 'Факт' : 'Потенциал';
+              return `<b>${escapeHtml(d.name)}</b>`
+                + `<br>${label} · база / мес: <b>${money(d.baseValue)}</b>`
+                + `<br>${label} · всё включено / мес: ${money(d.rawValue)}`;
             }
-            let t = `<b>${escapeHtml(p.name)}</b><br><span style="color:rgba(255,255,255,.6)">${escapeHtml(d.tenant)}</span>`
-              + `<br>Потенциал · база / мес: <b>${money(d.baseValue)}</b>`
-              + `<br>Потенциал · всё вкл. / мес: ${money(d.rawValue)}`;
-            if (multi) t += SEP
-              + `<br>Потенциал итого · база / мес: <b>${money(d.tenantBase)}</b>`
-              + `<br>Потенциал итого · всё вкл. / мес: ${money(d.tenantAll)}`;
-            return t;
+            return `<b>${escapeHtml(p.name)}</b><br><span style="color:rgba(255,255,255,.6)">${escapeHtml(d.tenant)}</span>`
+              + `<br>Лот · база / мес: <b>${money(d.baseValue)}</b>`
+              + `<br>Лот · всё включено / мес: ${money(d.rawValue)}`;
           },
           backgroundColor:'rgba(17,17,19,.94)', textStyle:{color:'#fff'}
         },
-        series:[{ type:'treemap', roam:true, nodeClick:false, breadcrumb:{show:false}, label:{show:true, formatter:'{b}', color:'#fff', fontWeight:800}, upperLabel:{show:false}, itemStyle:{gapWidth:5,borderRadius:7}, levels:[{itemStyle:{borderColor:'transparent', gapWidth:6}}], data:lots }]
+        series:[{
+          type:'treemap', roam:true, nodeClick:'zoomToNode',
+          breadcrumb:{ show:true, bottom:4, itemStyle:{ color:'rgba(255,255,255,.12)', textStyle:{color:'rgba(255,255,255,.85)'} } },
+          label:{ show:true, formatter:'{b}', color:'#fff', fontWeight:800 },
+          upperLabel:{
+            show:true, height:30,
+            formatter: p => `${p.name}   ·   База / мес: ${money(p.data.baseValue)}`,
+            color:'#fff', fontWeight:700, fontSize:12,
+            backgroundColor:'rgba(0,0,0,.35)', padding:[6,10]
+          },
+          itemStyle:{ gapWidth:5, borderRadius:4 },
+          levels:[
+            { itemStyle:{ borderColor:'rgba(255,255,255,.28)', borderWidth:4, gapWidth:8, borderRadius:6 }, upperLabel:{show:true} },
+            { itemStyle:{ borderColor:'rgba(255,255,255,.12)', borderWidth:2, gapWidth:4, borderRadius:4 } }
+          ],
+          data
+        }]
       });
     }
     function renderTenantBar() {
