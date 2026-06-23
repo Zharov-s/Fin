@@ -1888,7 +1888,7 @@
       });
       const data = Object.entries(tenantMap).map(([name, t]) => ({
         name,
-        value: Math.max(mln(t.base), 0.01),
+        value: Math.max(Math.sqrt(t.base), 0.1),
         baseValue: t.base,
         allValue:  t.all,
         area:      t.area,
